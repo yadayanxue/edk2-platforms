@@ -56,7 +56,7 @@ FILE = $(TFA_BUILD_BL1)
 #
 # ATF secondary boot image in FIP format (BL2 + BL31)
 #
-0x00020000|0x00010000
+0x00010000|0x00020000
 FILE = $(TFA_BUILD_FIP)
 
 #
@@ -290,7 +290,13 @@ READ_LOCK_STATUS   = TRUE
   INF MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
   INF MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
   INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
-  INF Drivers/ASIX/Bus/Usb/UsbNetworking/Ax88772c/Ax88772c.inf
+  # INF Drivers/ASIX/Bus/Usb/UsbNetworking/Ax88772c/Ax88772c.inf
+  # INF Drivers/ASIX/Bus/Usb/UsbNetworking/Ax88179/Ax88179.inf
+  INF Drivers/MicroChip/Bus/Usb/UsbNetwork/Smsc95xx/Smsc95xx.inf
+  # INF MdeModulePkg/Bus/Usb/UsbNetwork/NetworkCommon/NetworkCommon.inf
+  # INF MdeModulePkg/Bus/Usb/UsbNetwork/UsbCdcEcm/UsbCdcEcm.inf
+  # INF MdeModulePkg/Bus/Usb/UsbNetwork/UsbCdcNcm/UsbCdcNcm.inf
+  # INF MdeModulePkg/Bus/Usb/UsbNetwork/UsbRndis/UsbRndis.inf
 
   #
   # SD/MMC support

@@ -69,7 +69,7 @@ typedef struct {
 
 typedef struct {
   UINT8                     MacAddress[6];
-  UINT32                    Padding;
+  UINT8                     Padding[2];
 } RPI_FW_MAC_ADDR_TAG;
 
 typedef struct {

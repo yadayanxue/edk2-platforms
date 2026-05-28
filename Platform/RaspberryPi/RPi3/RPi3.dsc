@@ -29,9 +29,13 @@
   # Defines for default states.  These can be changed on the command line.
   # -D FLAG=VALUE
   #
-  DEFINE SECURE_BOOT_ENABLE      = FALSE
-  DEFINE INCLUDE_TFTP_COMMAND    = FALSE
-  DEFINE DEBUG_PRINT_ERROR_LEVEL = 0x8000004F
+  DEFINE NETWORK_TLS_ENABLE             = FALSE
+  DEFINE SECURE_BOOT_ENABLE             = FALSE
+  DEFINE NETWORK_HTTP_BOOT_ENABLE       = FALSE
+  DEFINE NETWORK_ALLOW_HTTP_CONNECTIONS = TRUE
+  DEFINE NETWORK_ISCSI_ENABLE           = TRUE
+  DEFINE INCLUDE_TFTP_COMMAND           = TRUE
+  DEFINE DEBUG_PRINT_ERROR_LEVEL        = 0x8000404F
 
 !ifndef TFA_BUILD_ARTIFACTS
   #
@@ -377,7 +381,7 @@
 [PcdsFixedAtBuild.common]
   gArmPlatformTokenSpaceGuid.PcdCoreCount|4
 
-  gArmPlatformTokenSpaceGuid.PcdCPUCorePrimaryStackSize|0x4000
+  gArmPlatformTokenSpaceGuid.PcdCPUCorePrimaryStackSize|0x20000
   gEfiMdeModulePkgTokenSpaceGuid.PcdMaxVariableSize|0x2000
   gEfiMdeModulePkgTokenSpaceGuid.PcdMaxAuthVariableSize|0x2800
 
@@ -696,7 +700,13 @@
   MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
   MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
   MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
-  Drivers/ASIX/Bus/Usb/UsbNetworking/Ax88772c/Ax88772c.inf
+  # Drivers/ASIX/Bus/Usb/UsbNetworking/Ax88772c/Ax88772c.inf
+  # Drivers/ASIX/Bus/Usb/UsbNetworking/Ax88179/Ax88179.inf
+  Drivers/MicroChip/Bus/Usb/UsbNetwork/Smsc95xx/Smsc95xx.inf
+  # MdeModulePkg/Bus/Usb/UsbNetwork/NetworkCommon/NetworkCommon.inf
+  # MdeModulePkg/Bus/Usb/UsbNetwork/UsbCdcEcm/UsbCdcEcm.inf
+  # MdeModulePkg/Bus/Usb/UsbNetwork/UsbCdcNcm/UsbCdcNcm.inf
+  # MdeModulePkg/Bus/Usb/UsbNetwork/UsbRndis/UsbRndis.inf
 
   #
   # SD/MMC support

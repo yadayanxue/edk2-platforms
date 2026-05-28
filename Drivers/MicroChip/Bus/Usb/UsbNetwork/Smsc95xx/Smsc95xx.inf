@@ -1,0 +1,50 @@
+## @file
+# Component description file for MicroChip Smsc95xx USB/Ethernet driver.
+#
+# This module provides support for the MicroChip Smsc95xx USB/Ethernet adapter.
+# Copyright (c) 2011 - 2018, Intel Corporation. All rights reserved.<BR>
+# Copyright (c) 2020, ARM Limited. All rights reserved.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010018
+  BASE_NAME                      = Smsc95xx
+  FILE_GUID                      = E1BFF047-0C7C-3384-64EF-760447DB3DFD
+  MODULE_TYPE                    = UEFI_DRIVER
+  VERSION_STRING                 = 1.0
+
+  ENTRY_POINT                    = EntryPoint
+
+[Sources.common]
+  Smsc95xx.h
+  Smsc95xx.c
+  ComponentName.c
+  DriverBinding.c
+  SimpleNetwork.c
+
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  NetworkPkg/NetworkPkg.dec
+
+[LibraryClasses]
+  BaseMemoryLib
+  DebugLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+  FdtLib
+  UefiUsbLib
+
+[Guids]
+  gFdtTableGuid
+
+[Protocols]
+  gEfiDevicePathProtocolGuid           ## BY_START
+  gEfiSimpleNetworkProtocolGuid        ## BY_START
+  gEfiUsbIoProtocolGuid                ## TO_START
+  gEfiDriverBindingProtocolGuid        ## PRODUCES
