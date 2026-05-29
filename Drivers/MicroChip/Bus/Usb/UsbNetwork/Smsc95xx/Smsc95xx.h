@@ -40,22 +40,25 @@
 //------------------------------------------------------------------------------
 
 /**
-  TURBO_MODE 多包突发模式，暂未实现
-  FS HS不同速度下的Burst Cap值需要调整，匹配缓存大小，且需要增加BulkIn的循环读取逻辑，直到读到一个完整包或者发生错误
-  单包模式下，tftp -s 1468 ，block size最大1468，刚好最大1518以太网帧大小
+  TURBO_MODE 多包突发模式，注意burst cap值过小会丢包，要保证缓存大小能容纳以太网帧
   以太网头部 14字节 + IP包数据载荷(MTU) 1500字节 + 帧校验(FCS) 4字节 = 1518字节
   IP包 : IP头部20字节 + UDP头部8字节 + TFTP协议头部4字节 + TFTP数据载荷 1468字节 = 1500字节
+
+  tftp -s 16384, bs 匹配 lan9514 缓存设置 16384，16k
+  FS HS不同速度下的Burst Cap值需要调整，匹配缓存大小
+  单包模式下，tftp -s bs ，block size 超过1468字节时，会分包多次bulkin接收。
 **/
-// #define TURBO_MODE
+#define TURBO_MODE
 
 #define ETH_P_8021Q 0x8100 /* 802.1Q VLAN Extended Header  */
 
 #define HS_USB_PKT_SIZE (512)
 #define FS_USB_PKT_SIZE (64)
-// #define DEFAULT_HS_BURST_CAP_SIZE (16 * 1024 + 5 * HS_USB_PKT_SIZE)
-// #define DEFAULT_FS_BURST_CAP_SIZE (6 * 1024 + 33 * FS_USB_PKT_SIZE)
-#define DEFAULT_HS_BURST_CAP_SIZE (5 * HS_USB_PKT_SIZE)
-#define DEFAULT_FS_BURST_CAP_SIZE (33 * FS_USB_PKT_SIZE)
+#define DEFAULT_HS_BURST_CAP_SIZE (8 * 1024 + 5 * HS_USB_PKT_SIZE)
+#define DEFAULT_FS_BURST_CAP_SIZE (3 * 1024 + 33 * FS_USB_PKT_SIZE)
+// 最小工作配置
+// #define DEFAULT_HS_BURST_CAP_SIZE (5 * HS_USB_PKT_SIZE)
+// #define DEFAULT_FS_BURST_CAP_SIZE (33 * FS_USB_PKT_SIZE)
 #define DEFAULT_BULK_IN_DELAY (0x00002000)
 #define MAX_SINGLE_PACKET_SIZE (2048)
 #define LAN95XX_EEPROM_MAGIC (0x9500)
@@ -111,7 +114,14 @@
 
 #define USB_MAX_BULKIN_SIZE   sizeof(RX_PACKET)
 #define USB_MAX_BULKOUT_SIZE  sizeof(TX_PACKET)
-#define ETH_MAX_PKT_SIZE      2048
+
+#define USB_MAX_PKT_TX_SIZE   (512*3)
+
+#ifdef TURBO_MODE
+#define USB_MAX_PKT_RX_SIZE   DEFAULT_HS_BURST_CAP_SIZE
+#else
+#define USB_MAX_PKT_RX_SIZE   (512*3)
+#endif
 
 #define HC_DEBUG        0
 #define BULKIN_TIMEOUT  3000
@@ -332,15 +342,16 @@ typedef struct {
 typedef struct _TX_PACKET {
   UINT32  TxHdr1;
   UINT32  TxHdr2;
-  UINT8   Data[ETH_MAX_PKT_SIZE]; ///<  Received packet data
+  UINT8   Data[USB_MAX_PKT_TX_SIZE];
 } TX_PACKET;
 #pragma pack()
 
 #pragma pack(1)
 typedef struct _RX_PACKET {
-  UINT16            EEEE;
+  UINT8             RxHdr1;
+  UINT8             RxHdr2;
   UINT16            Length;
-  UINT8             Data[ETH_MAX_PKT_SIZE];
+  UINT8             Data[USB_MAX_PKT_RX_SIZE];
 } RX_PACKET;
 #pragma pack()
 
@@ -382,9 +393,11 @@ typedef struct {
 
   //  接收数据相关
   RX_PACKET                 *BulkInbuf;
-  UINT16                    PktCnt;
-  UINT8                     *CurPktHdrOff;
-  UINT8                     *CurPktOff;
+#ifdef TURBO_MODE
+  UINT16                    BulkInbufIndex;
+  UINT16                    BulkInbufLegth;
+  UINT8                     RxBurst;
+#endif
 
   // 发送数据相关
   TX_PACKET                 *BulkOutBuf;
@@ -397,7 +410,6 @@ typedef struct {
 
   EFI_DEVICE_PATH_PROTOCOL  *MyDevPath;
   BOOLEAN                   FirstRst;
-  UINT8                     RxBurst;
 
   UINT8                     BulkInEndpoint;
   UINT8                     BulkOutEndpoint;
@@ -1437,11 +1449,6 @@ Smsc95xxPhyWrite (
 
 BOOLEAN
 Smsc95xxGetLinkStatus (
-  IN NIC_DEVICE *NicDevice
-);
-
-EFI_STATUS
-Smsc95xxBulkIn(
   IN NIC_DEVICE *NicDevice
 );
 

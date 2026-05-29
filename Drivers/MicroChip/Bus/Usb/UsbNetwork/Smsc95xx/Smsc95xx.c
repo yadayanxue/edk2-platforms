@@ -372,12 +372,12 @@ Smsc95xxNegotiateLinkStart (
     Smsc95xxPhyRead (NicDevice, MII_BMSR, &PhyData);
   } while (!(PhyData & BMSR_LSTATUS) && (Index < 10));
   if (Index >= 10) {
-    DEBUG ((DEBUG_ERROR, "[%a:%d -> %a] %r, timeout waiting for nego link start\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+    DEBUG ((DEBUG_ERROR, "%a:%d -> %a] %r, timeout waiting for nego link start\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   }
 
   Smsc95xxDumpRegs(NicDevice);
 
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -423,7 +423,7 @@ Smsc95xxNegotiateLinkComplete (
   //  Get the link status
   //
   Status = Smsc95xxPhyRead (NicDevice, MII_BMSR, &PhyData);
-  // DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r MII_BMSR: 0x%08x\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status, PhyData));
+  // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r MII_BMSR: 0x%08x\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status, PhyData));
   if (EFI_ERROR (Status)) {
     return Status;
   }
@@ -433,7 +433,7 @@ Smsc95xxNegotiateLinkComplete (
     *Complete = ((PhyData & BMSR_AUTONEG_CMPLT) != 0);
     if (*Complete) {
       Status = Smsc95xxPhyRead (NicDevice, PHY_ANLPAR, &PhyData);
-      // DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r PHY_ANLPAR: 0x%08x\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status, PhyData));
+      // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r PHY_ANLPAR: 0x%08x\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status, PhyData));
       if (EFI_ERROR (Status)) {
         return Status;
       }
@@ -450,7 +450,7 @@ Smsc95xxNegotiateLinkComplete (
     }
   }
 
-  // DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r PollCount: %d, Complete: %d, LinkUp: %d, HiSpeed: %d, FullDuplex: %d\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status, *PollCount, *Complete, *LinkUp, *HiSpeed, *FullDuplex));
+  // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r PollCount: %d, Complete: %d, LinkUp: %d, HiSpeed: %d, FullDuplex: %d\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status, *PollCount, *Complete, *LinkUp, *HiSpeed, *FullDuplex));
   return Status;
 }
 
@@ -496,7 +496,7 @@ Smsc95xxPhyRead (
   Status = Smsc95xxReadReg(NicDevice, MII_DATA, PhyData);
 
 err:
-  // DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -539,7 +539,7 @@ Smsc95xxPhyWrite (
   Status = Smsc95xxPhyWaitNotBusy(NicDevice);
 
 err:
-  // DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -566,7 +566,7 @@ Smsc95xxReset (
   UINT32              Data;
   INT32               Index;
 
-  DEBUG ((DEBUG_ERROR, "[%a:%d -> %a] entering smsc95xx_reset\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
+  DEBUG ((DEBUG_ERROR, "%a:%d -> %a] entering smsc95xx_reset\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
 
   // 1. 复位
   Status = Smsc95xxWriteReg(NicDevice, HW_CFG, HW_CFG_LRST_);
@@ -584,7 +584,7 @@ Smsc95xxReset (
   } while ((Data & HW_CFG_LRST_) && (Index < 100));
   if (Index >= 100) {
     Status = EFI_TIMEOUT;
-    DEBUG ((DEBUG_ERROR, "[%a:%d -> %a] %r, timeout waiting for completion of Lite Reset\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+    DEBUG ((DEBUG_ERROR, "%a:%d -> %a] %r, timeout waiting for completion of Lite Reset\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
     goto err;
   }
 
@@ -605,7 +605,7 @@ Smsc95xxReset (
   } while ((Data & HW_CFG_LRST_) && (Index < 100));
   if (Index >= 100) {
     Status = EFI_TIMEOUT;
-    DEBUG ((DEBUG_ERROR, "[%a:%d -> %a] %r, timeout waiting for PHY Reset\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+    DEBUG ((DEBUG_ERROR, "%a:%d -> %a] %r, timeout waiting for PHY Reset\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
     goto err;
   }
 
@@ -638,8 +638,7 @@ Smsc95xxReset (
   Data = 0;
 
 #ifdef TURBO_MODE
-  // Data = DEFAULT_HS_BURST_CAP_SIZE / HS_USB_PKT_SIZE;
-  // Data = DEFAULT_FS_BURST_CAP_SIZE / FS_USB_PKT_SIZE;
+  Data = NicDevice->RxBurst;
 #endif
 
   Status = Smsc95xxWriteReg(NicDevice, BURST_CAP, Data);
@@ -671,7 +670,10 @@ Smsc95xxReset (
   DEBUG ((DEBUG_INFO, "Read Value from HW_CFG: 0x%08x\n", Data));
 
 #ifdef TURBO_MODE
-  Data |= (HW_CFG_MEF_ | HW_CFG_BCE_);
+  if (NicDevice->RxBurst)
+  {
+    Data |= (HW_CFG_MEF_ | HW_CFG_BCE_);
+  }
 #endif
 
   Data &= ~HW_CFG_RXDOFF_;
@@ -769,7 +771,7 @@ Smsc95xxReset (
   } while ((Data & BMCR_RESET) && (Index < 100));
   if (Index >= 100) {
     Status = EFI_TIMEOUT;
-    DEBUG ((DEBUG_ERROR, "[%a:%d -> %a] %r, timeout waiting for PHY BMCR Reset\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+    DEBUG ((DEBUG_ERROR, "%a:%d -> %a] %r, timeout waiting for PHY BMCR Reset\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
     goto err;
   }
   Status = Smsc95xxPhyWrite (NicDevice, MII_ADVERTISE, ADVERTISE_ALL | ADVERTISE_CSMA | ADVERTISE_PAUSE_CAP | ADVERTISE_PAUSE_ASYM);
@@ -815,7 +817,7 @@ Smsc95xxReset (
   Smsc95xxDumpRegs(NicDevice);
 
 err:
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -842,7 +844,7 @@ Smsc95xxRxControl (
   EFI_STATUS    Status = EFI_SUCCESS;
   UINT16        RxControl;
 
-  // DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] RxFilter: 0x%x\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, RxFilter));
+  // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] RxFilter: 0x%x\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, RxFilter));
 
   //
   // Enable the receiver if something is to be received
@@ -883,7 +885,7 @@ Smsc95xxRxControl (
     RxControl |= RXC_PRO;
   }
 
-  // DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] CurRxControl: %d -> %d\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, NicDevice->CurRxControl, RxControl));
+  // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] CurRxControl: %d -> %d\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, NicDevice->CurRxControl, RxControl));
   //
   //  Update the receiver control
   //
@@ -896,7 +898,7 @@ Smsc95xxRxControl (
   // Return the operation status
   //
 EXIT:
-  // DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -1069,78 +1071,10 @@ Smsc95xxGetLinkStatus (
                                         &IntDataLeng,
                                         USB_BUS_TIMEOUT,
                                         &CmdStatus);
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r, %r, D: %08x, L: %d\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status, CmdStatus, IntData, IntDataLeng));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r, 0x%08x, D: %08x, L: %d\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status, CmdStatus, IntData, IntDataLeng));
 
   if (EFI_ERROR(Status) || EFI_ERROR(CmdStatus) || 0 == IntDataLeng) {
       return FALSE;
   }
   return (IntData & INT_ENP_PHY_INT_) ? FALSE : TRUE;
-}
-
-EFI_STATUS
-Smsc95xxBulkIn(
-  IN NIC_DEVICE *NicDevice
-)
-{
-  EFI_STATUS          Status = EFI_DEVICE_ERROR;
-  EFI_USB_IO_PROTOCOL *UsbIo;
-  UINTN               LengthInBytes = 0;
-  UINT32              TransferStatus = 0;
-
-  UsbIo = NicDevice->UsbIo;
-
-  while (LengthInBytes < USB_MAX_BULKIN_SIZE)
-  {
-    UINT8 *TmpAddr = ((UINT8 *)NicDevice->BulkInbuf) + LengthInBytes;
-    UINTN TmpLen = USB_MAX_BULKIN_SIZE - LengthInBytes;
-
-    Status = UsbIo->UsbBulkTransfer(UsbIo,
-                                    NicDevice->BulkInEndpoint,
-                                    TmpAddr,
-                                    &TmpLen,
-                                    BULKIN_TIMEOUT,
-                                    &TransferStatus);
-
-    if (!EFI_ERROR(Status) && !EFI_ERROR(TransferStatus)) {
-      LengthInBytes += TmpLen;
-      // DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] LengthInBytes: %d, + %d\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, LengthInBytes, TmpLen));
-      if (LengthInBytes >= 4) {
-        if (LengthInBytes >= NicDevice->BulkInbuf->Length + 4) {
-          // ETHERNET_HEADER *EthHead = (ETHERNET_HEADER *)NicDevice->BulkInbuf->Data;
-          // if (EthHead->Type != 0x0608 // ARP
-          //  && EthHead->Type != 0x0008 // IPv4
-          //  )
-          // {
-          //   UINT32 len = NicDevice->BulkInbuf->Length;
-          //   for (UINT32 i = 0; i < len; i++)
-          //   {
-          //     if (i < 20) {
-          //       DEBUG ((DEBUG_INFO, "0x%02x ", NicDevice->BulkInbuf->Data[i]));
-          //     }
-          //     else if (i == 20) {
-          //       DEBUG ((DEBUG_INFO, "... "));
-          //     }
-          //   }
-          //   DEBUG ((DEBUG_INFO, "\n"));
-          // }
-          // DEBUG ((DEBUG_INFO, "BulkIn->EEEE: 0x%04x, Length: %d\n", NicDevice->BulkInbuf->EEEE, NicDevice->BulkInbuf->Length));
-          // if (NicDevice->BulkInbuf->EEEE != 0x2420) {
-          //   Status = EFI_INVALID_PARAMETER;
-          // }
-          goto done;
-        }
-      }
-      if (TmpLen == 0) {
-        Status = EFI_NOT_READY;
-        goto done;
-      }
-    } else {
-        Status = EFI_NOT_READY;
-        goto done;
-    }
-  }
-
-done:
-// no_pkt:
-  return Status;
 }

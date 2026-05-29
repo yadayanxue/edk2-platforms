@@ -44,6 +44,15 @@ GetEndpoint (
       case USB_ENDPOINT_BULK:
         if (Endpoint.EndpointAddress & BIT7) {
           NicDevice->BulkInEndpoint = Endpoint.EndpointAddress;
+#ifdef TURBO_MODE
+          if (Endpoint.MaxPacketSize == HS_USB_PKT_SIZE) {
+            NicDevice->RxBurst = DEFAULT_HS_BURST_CAP_SIZE / HS_USB_PKT_SIZE;
+          } else if (Endpoint.MaxPacketSize == FS_USB_PKT_SIZE) {
+            NicDevice->RxBurst = DEFAULT_FS_BURST_CAP_SIZE / FS_USB_PKT_SIZE;
+          } else {
+            NicDevice->RxBurst = 0;
+          }
+#endif
         } else {
           NicDevice->BulkOutEndpoint = Endpoint.EndpointAddress;
         }
@@ -90,7 +99,7 @@ ReceiveFilterUpdate (
   EFI_STATUS              Status;
   UINT32                  Index;
 
-  // DEBUG ((DEBUG_INFO, "  [%a:%d -> %a]\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
+  // DEBUG ((DEBUG_INFO, "  %a:%d -> %a]\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
   //
   // Set the MAC address
   //
@@ -119,7 +128,7 @@ ReceiveFilterUpdate (
   //
   Status = Smsc95xxRxControl (NicDevice, Mode->ReceiveFilterSetting);
 
-  // DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -242,7 +251,7 @@ SN_GetStatus (
 
 EXIT:
   gBS->RestoreTPL(TplPrevious) ;
-  // DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -352,7 +361,7 @@ SN_NvData (
   //
 EXIT:
   gBS->RestoreTPL (TplPrevious);
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -431,7 +440,7 @@ SN_Initialize (
   // Return the operation status
   //
   gBS->RestoreTPL (TplPrevious);
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -512,7 +521,7 @@ SN_MCastIPtoMAC (
 
 EXIT:
   gBS->RestoreTPL(TplPrevious);
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -576,12 +585,17 @@ SN_Receive (
   OUT UINT16                      *Protocol
   )
 {
-  ETHERNET_HEADER         *Header;
   EFI_SIMPLE_NETWORK_MODE *Mode;
   NIC_DEVICE              *NicDevice;
   EFI_STATUS              Status;
   UINT16                  Type;
   EFI_TPL                 TplPrevious;
+
+  EFI_USB_IO_PROTOCOL     *UsbIo;
+  UINT32                  TransferStatus = 0;
+
+  RX_PACKET               *RxPacket;
+  ETHERNET_HEADER         *Header;
 
   TplPrevious = gBS->RaiseTPL (TPL_CALLBACK);
   //
@@ -608,23 +622,108 @@ SN_Receive (
         //
         //  Attempt to do bulk in
         //
-        Status = Smsc95xxBulkIn(NicDevice);
-        if (EFI_ERROR(Status)) {
+        UsbIo = NicDevice->UsbIo;
+#ifdef TURBO_MODE
+        if (!NicDevice->BulkInbufIndex)
+#endif
+        {
+          UINT8 *TmpAddr = ((UINT8 *)NicDevice->BulkInbuf);
+          UINTN TmpLen = USB_MAX_BULKIN_SIZE;
+
+          Status = UsbIo->UsbBulkTransfer(UsbIo,
+                                          NicDevice->BulkInEndpoint,
+                                          TmpAddr,
+                                          &TmpLen,
+                                          BULKIN_TIMEOUT,
+                                          &TransferStatus);
+          // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r, 0x%08x\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status, TransferStatus));
+
+          if (!EFI_ERROR(Status) && !EFI_ERROR(TransferStatus)) {
+            // if (TmpLen) {
+            //   DEBUG ((DEBUG_INFO, "  %a:%d -> %a] Length: %d\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, TmpLen));
+            //   // for (UINT32 i = 0; i < TmpLen; i++)
+            //   // {
+            //   //   if (i % 1522 == 0) {
+            //   //     DEBUG ((DEBUG_INFO, "\n"));
+            //   //   }
+            //   //   DEBUG ((DEBUG_INFO, "0x%02x ", TmpAddr[i]));
+            //   // }
+            //   // DEBUG ((DEBUG_INFO, "\n"));
+            // }
+            if (TmpLen >= 4 + MIN_ETHERNET_PKT_SIZE) {
+#ifdef TURBO_MODE
+              NicDevice->BulkInbufLegth = TmpLen;
+#endif
+            } else {
+              Status = EFI_NOT_READY;
+              goto no_pkt;
+            }
+          } else {
+              Status = EFI_NOT_READY;
+              goto no_pkt;
+          }
+        }
+
+#ifdef TURBO_MODE
+        RxPacket = (RX_PACKET *)(((UINT8 *)NicDevice->BulkInbuf) + NicDevice->BulkInbufIndex);
+#else
+        RxPacket = NicDevice->BulkInbuf;
+#endif
+
+        // DEBUG ((DEBUG_INFO, "BulkIn->RxHdr: 0x%02x, 0x%02x, Length: %d\n", RxPacket->RxHdr1, RxPacket->RxHdr2, RxPacket->Length));
+
+#ifdef TURBO_MODE
+        // 每个包地址对齐到4字节
+        UINT16 Index = (NicDevice->BulkInbufIndex + RxPacket->Length + 4 + 3) & 0xFFFC;
+        if (Index < NicDevice->BulkInbufLegth) {
+          NicDevice->BulkInbufIndex = Index;
+        } else {
+          NicDevice->BulkInbufIndex = 0;
+        }
+        // DEBUG ((DEBUG_INFO, "BulkInbufIndex: %d, BulkInbufLegth: %d\n", NicDevice->BulkInbufIndex, NicDevice->BulkInbufLegth));
+#endif
+
+        if (RxPacket->RxHdr1  != 0x20) {
+#ifdef TURBO_MODE
+          // UINT8 *TmpAddr = ((UINT8 *)NicDevice->BulkInbuf);
+          // for (UINT32 i = 0; i < NicDevice->BulkInbufLegth; i++)
+          // {
+          //   if (i % 1522 == 0) {
+          //     DEBUG ((DEBUG_INFO, "\n"));
+          //   }
+          //   DEBUG ((DEBUG_INFO, "0x%02x ", TmpAddr[i]));
+          // }
+          // DEBUG ((DEBUG_INFO, "\n"));
+          NicDevice->BulkInbufIndex = 0;
+#endif
+          Status = EFI_NOT_READY;
           goto no_pkt;
         }
-        // DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] ", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
+
+        // for (UINT32 i = 0; i < RxPacket->Length; i++)
+        // {
+        //   if (i < 14) {
+        //     DEBUG ((DEBUG_INFO, "0x%02x ", RxPacket->Data[i]));
+        //   }
+        //   else if (i == 14) {
+        //     DEBUG ((DEBUG_INFO, "... "));
+        //   }
+        // }
+        // DEBUG ((DEBUG_INFO, "\n"));
+
+        // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] ", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
         // DEBUG ((DEBUG_INFO, "HeaderSize: %d, BufferSize: %d, Buffer: %p, SrcAddr: %p, DestAddr: %p, Protocol: %p\n",
         //         HeaderSize ? *HeaderSize : 0, *BufferSize, Buffer, SrcAddr, DestAddr, Protocol));
-        if ((MIN_ETHERNET_PKT_SIZE <= NicDevice->BulkInbuf->Length)
-         && (NicDevice->BulkInbuf->Length <= ETHERNET_HEADER_SIZE + NET_VLAN_TAG_LEN + MAX_ETHERNET_PKT_SIZE + 4))
+        if ((MIN_ETHERNET_PKT_SIZE <= RxPacket->Length)
+         && (RxPacket->Length <= ETHERNET_HEADER_SIZE + NET_VLAN_TAG_LEN + MAX_ETHERNET_PKT_SIZE + 4))
         {
-          if (*BufferSize < (UINTN) NicDevice->BulkInbuf->Length) {
+          if (*BufferSize < (UINTN) RxPacket->Length) {
             gBS->RestoreTPL (TplPrevious);
             return EFI_BUFFER_TOO_SMALL;
           }
-          *BufferSize = NicDevice->BulkInbuf->Length;
-          CopyMem (Buffer, NicDevice->BulkInbuf->Data, NicDevice->BulkInbuf->Length);
-          Header = (ETHERNET_HEADER *) NicDevice->BulkInbuf->Data;
+          *BufferSize = RxPacket->Length;
+          CopyMem (Buffer, RxPacket->Data, RxPacket->Length);
+          Header = (ETHERNET_HEADER *) RxPacket->Data;
 
           if ((HeaderSize != NULL)) {
             *HeaderSize = sizeof (*Header);
@@ -753,7 +852,7 @@ SN_ReceiveFilters (
   UINTN                   Index;
   UINT8                   Temp;
 
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a]\n, EN:0x%08x, DIS:0x%08x, RST:%d, CNT:%d\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Enable, Disable, ResetMCastFilter, MCastFilterCnt));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a]\n, EN:0x%08x, DIS:0x%08x, RST:%d, CNT:%d\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Enable, Disable, ResetMCastFilter, MCastFilterCnt));
   TplPrevious = gBS->RaiseTPL(TPL_CALLBACK);
   Mode = SimpleNetwork->Mode;
 
@@ -849,7 +948,7 @@ SN_ReceiveFilters (
 
   gBS->RestoreTPL(TplPrevious);
 
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -891,7 +990,7 @@ SN_Reset (
   EFI_STATUS              Status;
   EFI_TPL                 TplPrevious;
 
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a]\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a]\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
   TplPrevious = gBS->RaiseTPL(TPL_CALLBACK);
   //
   //  Verify the parameters
@@ -929,7 +1028,7 @@ SN_Reset (
   // Return the operation status
   //
   gBS->RestoreTPL(TplPrevious);
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -1025,7 +1124,7 @@ SN_Setup (
   CopyMem (&Mode->CurrentAddress,
             &Mode->PermanentAddress,
             PXE_HWADDR_LEN_ETHER);
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   DEBUG ((DEBUG_INFO,
           "MAC address %02x:%02x:%02x:%02x:%02x:%02x\n",
           Mode->CurrentAddress.Addr[0],
@@ -1080,7 +1179,7 @@ SN_Start (
   EFI_STATUS              Status;
   EFI_TPL                 TplPrevious;
 
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a]\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a]\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
   TplPrevious = gBS->RaiseTPL(TPL_CALLBACK);
   //
   // Verify the parameters
@@ -1114,7 +1213,7 @@ SN_Start (
       CopyMem (&Mode->CurrentAddress,
                 &Mode->PermanentAddress,
                 sizeof (Mode->CurrentAddress));
-      DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+      DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
       DEBUG ((DEBUG_INFO,
               "MAC address %02x:%02x:%02x:%02x:%02x:%02x\n",
               Mode->CurrentAddress.Addr[0],
@@ -1139,7 +1238,7 @@ SN_Start (
   // Return the operation status
   //
   gBS->RestoreTPL(TplPrevious);
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -1184,7 +1283,7 @@ SN_StationAddress (
 
   EFI_TPL TplPrevious;
 
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a]\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a]\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
   TplPrevious = gBS->RaiseTPL(TPL_CALLBACK);
   //
   // Verify the parameters
@@ -1236,7 +1335,7 @@ SN_StationAddress (
   // Return the operation status
   //
   gBS->RestoreTPL(TplPrevious);
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -1276,7 +1375,7 @@ SN_Statistics (
   EFI_TPL                 TplPrevious;
   EFI_SIMPLE_NETWORK_MODE *Mode;
 
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a]\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a]\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
   TplPrevious = gBS->RaiseTPL(TPL_CALLBACK);
   Mode = SimpleNetwork->Mode;
 
@@ -1304,7 +1403,7 @@ SN_Statistics (
 
 EXIT:
   gBS->RestoreTPL(TplPrevious);
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -1333,7 +1432,7 @@ SN_Stop (
   EFI_STATUS              Status;
   EFI_TPL                 TplPrevious;
 
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a]\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a]\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
   TplPrevious = gBS->RaiseTPL(TPL_CALLBACK);
   //
   // Verify the parameters
@@ -1358,7 +1457,7 @@ SN_Stop (
   // Return the operation status
   //
   gBS->RestoreTPL(TplPrevious);
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -1389,7 +1488,7 @@ SN_Shutdown (
   UINT32                  RxFilter;
   EFI_TPL                 TplPrevious;
 
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a]\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a]\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
   TplPrevious = gBS->RaiseTPL(TPL_CALLBACK);
   //
   // Verify the parameters
@@ -1427,7 +1526,7 @@ SN_Shutdown (
   // Return the operation status
   //
   gBS->RestoreTPL(TplPrevious);
-  DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
 
@@ -1499,7 +1598,7 @@ SN_Transmit (
 
   BOOLEAN                 NoPrint = FALSE;
 
-  // DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] ", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
+  // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] ", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
   // DEBUG ((DEBUG_INFO, "HeaderSize: %d, BufferSize: %d, Buffer: %p, SrcAddr: %p, DestAddr: %p, Protocol: %p\n",
   //         HeaderSize, BufferSize, Buffer, SrcAddr, DestAddr, Protocol));
   // DEBUG ((DEBUG_INFO, "SrcAddr: %02x:%02x:%02x:%02x:%02x:%02x, DestAddr: %02x:%02x:%02x:%02x:%02x:%02x, Type: %04x\n",
@@ -1597,10 +1696,10 @@ SN_Transmit (
           DEBUG ((DEBUG_INFO, "BulkOut->Hdr1: %04x, Hdr2: %04x, Size: %d, Length: %d\n", NicDevice->BulkOutBuf->TxHdr1, NicDevice->BulkOutBuf->TxHdr2, BufferSize, TransferLength));
           for (UINT32 i = 0; i < BufferSize; i++)
           {
-            if (i < 20) {
+            if (i < 14) {
               DEBUG ((DEBUG_INFO, "0x%02x ", NicDevice->BulkOutBuf->Data[i]));
             }
-            else if (i == 20) {
+            else if (i == 14) {
               DEBUG ((DEBUG_INFO, "... "));
             }
           }
@@ -1620,7 +1719,7 @@ SN_Transmit (
                                            &TransferStatus);
 
         if (!NoPrint) {
-          DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r, %d, BufferSize: %d, TransferLength: %d\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status, TransferStatus, BufferSize, TransferLength));
+          DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r, 0x%08x, BufferSize: %d, TransferLength: %d\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status, TransferStatus, BufferSize, TransferLength));
         }
 
         if (EFI_SUCCESS == Status && EFI_SUCCESS == TransferStatus) {
@@ -1652,6 +1751,6 @@ SN_Transmit (
 
 EXIT:
   gBS->RestoreTPL (TplPrevious);
-  // DEBUG ((DEBUG_INFO, "  [%a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
+  // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status));
   return Status;
 }
