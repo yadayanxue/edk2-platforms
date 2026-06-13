@@ -1176,7 +1176,6 @@ SN_Start (
   IN EFI_SIMPLE_NETWORK_PROTOCOL *SimpleNetwork
   )
 {
-  NIC_DEVICE              *NicDevice;
   EFI_SIMPLE_NETWORK_MODE *Mode;
   EFI_STATUS              Status;
   EFI_TPL                 TplPrevious;
@@ -1210,7 +1209,6 @@ SN_Start (
       Mode->MCastFilterCount = 0;
       Mode->NvRamSize = 512;
       Mode->NvRamAccessSize = 2;
-      NicDevice = DEV_FROM_SIMPLE_NETWORK (SimpleNetwork);
       Status = Smsc95xxMacAddressInit(&Mode->PermanentAddress.Addr[0]);
       CopyMem (&Mode->CurrentAddress,
                 &Mode->PermanentAddress,
