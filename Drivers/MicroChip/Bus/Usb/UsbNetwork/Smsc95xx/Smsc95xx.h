@@ -186,42 +186,20 @@
 #define RXC_MFB_8192      0x0200  ///<  Maximum frame size:  8192 bytes
 #define RXC_MFB_16384     0x0300  ///<  Maximum frame size: 16384 bytes
 
-#define RXC_RH1M          0x0100  ///<  Rx header 1
-
 //
 //  Medium Status register
 //
 
-#define MS_FD             0x0002  ///<  Full duplex
-#define MS_ONE            0x0004  ///<  Must be one
-#define MS_RFC            0x0010  ///<  RX flow control enable
-#define MS_TFC            0x0020  ///<  TX flow control enable
-#define MS_PF             0x0080  ///<  Pause frame enable
-#define MS_RE             0x0100  ///<  Receive enable
-#define MS_PS             0x0200  ///<  Port speed 1=100, 0=10 Mbps
-#define MS_SBP            0x0800  ///<  Stop back pressure
-#define MS_SM             0x1000  ///<  Super MAC support
 
 //
 //  Software PHY Select register
 //
 
-#define SPHY_PSEL         (1 << 0)    ///<  Select internal PHY
-#define SPHY_SSMII        (1 << 2)
-#define SPHY_SSEN         (1 << 4)
-#define SPHY_ASEL         0x02    ///<  1=Auto select, 0=Manual select
 
 //
 //  Software Reset register
 //
 
-#define SRR_RR            0x01    ///<  Clear receive frame length error
-#define SRR_RT            0x02    ///<  Clear transmit frame length error
-#define SRR_BZTYPE        0x04    ///<  External PHY reset pin tri-state enable
-#define SRR_PRL           0x08    ///<  External PHY reset pin level
-#define SRR_BZ            0x10    ///<  Force Bulk to return zero length packet
-#define SRR_IPRL          0x20    ///<  Internal PHY reset control
-#define SRR_IPPD          0x40    ///<  Internal PHY power down
 
 //
 //  PHY ID values
@@ -233,27 +211,6 @@
 //  USB Commands
 //
 
-#define CMD_PHY_ACCESS_SOFTWARE   0x06  ///<  Software in control of PHY
-#define CMD_PHY_REG_READ          0x07  ///<  Read PHY register, Value: PHY, Index: Register, Data: Register value
-#define CMD_PHY_REG_WRITE         0x08  ///<  Write PHY register, Value: PHY, Index: Register, Data: New 16-bit value
-#define CMD_PHY_ACCESS_HARDWARE   0x0a  ///<  Hardware in control of PHY
-#define CMD_SROM_READ             0x0b  ///<  Read SROM register: Value: Address, Data: Value
-#define CMD_SROM_WRITE            0x0c  ///<  Read SROM register: Value: Address, Data: Value
-#define CMD_SROM_WRITE_EN         0x0d
-#define CMD_SROM_WRITE_DIS        0x0e
-#define CMD_RX_CONTROL_WRITE      0x10  ///<  Set the RX control register, Value: New value
-#define CMD_GAPS_WRITE            0x12  ///<  Write the gaps register, Value: New value
-#define CMD_MAC_ADDRESS_READ      0x13  ///<  Read the MAC address, Data: 6 byte MAC address
-#define CMD_MAC_ADDRESS_WRITE     0x14  ///<  Set the MAC address, Data: New 6 byte MAC address
-#define CMD_MULTICAST_HASH_READ   0x15  ///<  Read the multicast hash table
-#define CMD_MULTICAST_HASH_WRITE  0x16  ///<  Write the multicast hash table, Data: New 8 byte value
-#define CMD_MEDIUM_STATUS_READ    0x1a  ///<  Read medium status register, Data: Register value
-#define CMD_MEDIUM_STATUS_WRITE   0x1b  ///<  Write medium status register, Value: New value
-#define CMD_WRITE_GPIOS           0x1f
-#define CMD_RESET                 0x20  ///<  Reset register, Value: New value
-#define CMD_PHY_SELECT            0x22  ///<  PHY select register, Value: New value
-
-#define CMD_RXQTC                 0x2a  ///<  RX Queue Cascade Threshold Control Register
 
 //------------------------------
 //  USB Endpoints
@@ -267,744 +224,6 @@
 //------------------------------
 //  PHY Registers
 //------------------------------
-
-#define PHY_BMCR                        0       ///<  Control register
-#define PHY_BMSR                        1       ///<  Status register
-#define PHY_ANAR                        4       ///<  Autonegotiation advertisement register
-#define PHY_ANLPAR                      5       ///<  Autonegotiation link parter ability register
-#define PHY_ANER                        6       ///<  Autonegotiation expansion register
-
-//  BMCR - Register 0
-
-#define BMCR_RESET                      0x8000  ///<  1 = Reset the PHY, bit clears after reset
-#define BMCR_LOOPBACK                   0x4000  ///<  1 = Loopback enabled
-#define BMCR_100MBPS                    0x2000  ///<  100 Mbits/Sec
-#define BMCR_10MBPS                     0       ///<  10 Mbits/Sec
-#define BMCR_AUTONEGOTIATION_ENABLE     0x1000  ///<  1 = Enable autonegotiation
-#define BMCR_POWER_DOWN                 0x0800  ///<  1 = Power down
-#define BMCR_ISOLATE                    0x0400  ///<  0 = Isolate PHY
-#define BMCR_RESTART_AUTONEGOTIATION    0x0200  ///<  1 = Restart autonegotiation
-#define BMCR_FULL_DUPLEX                0x0100  ///<  Full duplex operation
-#define BMCR_HALF_DUPLEX                0       ///<  Half duplex operation
-#define BMCR_COLLISION_TEST             0x0080  ///<  1 = Collision test enabled
-
-//  BMSR - Register 1
-
-#define BMSR_100BASET4                  0x8000  ///<  1 = 100BASE-T4 mode
-#define BMSR_100BASETX_FDX              0x4000  ///<  1 = 100BASE-TX full duplex
-#define BMSR_100BASETX_HDX              0x2000  ///<  1 = 100BASE-TX half duplex
-#define BMSR_10BASET_FDX                0x1000  ///<  1 = 10BASE-T full duplex
-#define BMSR_10BASET_HDX                0x0800  ///<  1 = 10BASE-T half duplex
-#define BMSR_MF                         0x0040  ///<  1 = PHY accepts frames with preamble suppressed
-#define BMSR_AUTONEG_CMPLT              0x0020  ///<  1 = Autonegotiation complete
-#define BMSR_RF                         0x0010  ///<  1 = Remote fault
-#define BMSR_AUTONEG                    0x0008  ///<  1 = Able to perform autonegotiation
-#define BMSR_LINKST                     0x0004  ///<  1 = Link up
-#define BMSR_JABBER_DETECT              0x0002  ///<  1 = jabber condition detected
-#define BMSR_EXTENDED_CAPABILITY        0x0001  ///<  1 = Extended register capable
-
-//  ANAR and ANLPAR Registers 4, 5
-
-#define AN_NP                           0x8000  ///<  1 = Next page available
-#define AN_ACK                          0x4000  ///<  1 = Link partner acknowledged
-#define AN_RF                           0x2000  ///<  1 = Remote fault indicated by link partner
-#define AN_FCS                          0x0400  ///<  1 = Flow control ability
-#define AN_T4                           0x0200  ///<  1 = 100BASE-T4 support
-#define AN_TX_FDX                       0x0100  ///<  1 = 100BASE-TX Full duplex
-#define AN_TX_HDX                       0x0080  ///<  1 = 100BASE-TX support
-#define AN_10_FDX                       0x0040  ///<  1 = 10BASE-T Full duplex
-#define AN_10_HDX                       0x0020  ///<  1 = 10BASE-T support
-#define AN_CSMA_CD                      0x0001  ///<  1 = IEEE 802.3 CSMA/CD support
-
-
-
-//------------------------------------------------------------------------------
-//  Data Types
-//------------------------------------------------------------------------------
-
-/**
-  Ethernet header layout
-
-  IEEE 802.3-2002 Part 3 specification, section 3.1.1.
-**/
-#pragma pack(1)
-typedef struct {
-  UINT8  DestAddr[PXE_HWADDR_LEN_ETHER];  ///<  Destination LAN address
-  UINT8  SrcAddr[PXE_HWADDR_LEN_ETHER];   ///<  Source LAN address
-  UINT16 Type;                            ///<  Protocol or length
-} ETHERNET_HEADER;
-#pragma pack()
-
-/**
-  Receive and Transmit packet structure
-**/
-#pragma pack(1)
-typedef struct _TX_PACKET {
-  UINT32  TxHdr1;
-  UINT32  TxHdr2;
-  UINT8   Data[USB_MAX_PKT_TX_SIZE];
-} TX_PACKET;
-#pragma pack()
-
-#pragma pack(1)
-typedef struct _RX_PACKET {
-  UINT8             RxHdr1;
-  UINT8             RxHdr2;
-  UINT16            Length;
-  UINT8             Data[USB_MAX_PKT_RX_SIZE];
-} RX_PACKET;
-#pragma pack()
-
-/**
-  Smsc95xx control structure
-
-  The driver uses this structure to manage the MicroChip Smsc95xx 10/100
-  Ethernet controller.
-**/
-typedef struct {
-  UINTN                     Signature;         ///<  Structure identification
-
-  //
-  //  USB data
-  //
-  EFI_HANDLE                Controller;        ///<  Controller handle
-  EFI_USB_IO_PROTOCOL       *UsbIo;            ///<  USB driver interface
-
-  //
-  //  Simple network protocol data
-  //
-  EFI_SIMPLE_NETWORK_PROTOCOL SimpleNetwork;     ///<  Driver's network stack interface
-  EFI_SIMPLE_NETWORK_MODE     SimpleNetworkData; ///<  Data for simple network
-
-  //
-  // Ethernet controller data
-  //
-  BOOLEAN                   Initialized;       ///<  Controller initialized
-  UINT16                    PhyId;             ///<  PHY ID
-
-  //
-  //  Link state
-  //
-  BOOLEAN                   LinkSpeed100Mbps;   ///<  Current link speed, FALSE = 10 Mbps
-  BOOLEAN                   Complete;           ///<  Current state of auto-negotiation
-  BOOLEAN                   FullDuplex;         ///<  Current duplex
-  BOOLEAN                   LinkUp;             ///<  Current link state
-  UINTN                     PollCount;          ///<  Number of times the autonegotiation status was polled
-
-  //  接收数据相关
-  RX_PACKET                 *BulkInbuf;
-#ifdef TURBO_MODE
-  UINT16                    BulkInbufIndex;
-  UINT16                    BulkInbufLegth;
-  UINT8                     RxBurst;
-#endif
-
-  // 发送数据相关
-  TX_PACKET                 *BulkOutBuf;
-  VOID                      *TxBuffer;          // 记录发送数据缓存区的地址，等待回收
-
-  UINT8                     MulticastHash[8];
-  UINT32                    MacCR;
-
-  UINT16                    CurRxControl;
-
-  EFI_DEVICE_PATH_PROTOCOL  *MyDevPath;
-  BOOLEAN                   FirstRst;
-
-  UINT8                     BulkInEndpoint;
-  UINT8                     BulkOutEndpoint;
-  UINT8                     InterruptEndpoint;
-
-} NIC_DEVICE;
-
-#define DEV_FROM_SIMPLE_NETWORK(a)  CR (a, NIC_DEVICE, SimpleNetwork, DEV_SIGNATURE)  ///< Locate NIC_DEVICE from Simple Network Protocol
-
-//------------------------------------------------------------------------------
-// Simple Network Protocol
-//------------------------------------------------------------------------------
-
-/**
-  Reset the network adapter.
-
-  Resets a network adapter and reinitializes it with the parameters that
-  were provided in the previous call to Initialize ().  The transmit and
-  receive queues are cleared.  Receive filters, the station address, the
-  statistics, and the multicast-IP-to-HW MAC addresses are not reset by
-  this call.
-
-  This routine calls ::Smsc95xxReset to perform the adapter specific
-  reset operation.  This routine also starts the link negotiation
-  by calling ::Smsc95xxNegotiateLinkStart.
-
-  @param [in] SimpleNetwork    Protocol instance pointer
-  @param [in] ExtendedVerification  Indicates that the driver may perform a more
-                                exhaustive verification operation of the device
-                                during reset.
-
-  @retval EFI_SUCCESS           This operation was successful.
-  @retval EFI_NOT_STARTED       The network interface was not started.
-  @retval EFI_INVALID_PARAMETER SimpleNetwork parameter was NULL or did not point to a valid
-                                EFI_SIMPLE_NETWORK_PROTOCOL structure.
-  @retval EFI_DEVICE_ERROR      The command could not be sent to the network interface.
-  @retval EFI_UNSUPPORTED       The increased buffer size feature is not supported.
-
-**/
-EFI_STATUS
-EFIAPI
-SN_Reset (
-  IN EFI_SIMPLE_NETWORK_PROTOCOL *SimpleNetwork,
-  IN BOOLEAN                     ExtendedVerification
-  );
-
-/**
-  Initialize the simple network protocol.
-
-  This routine calls ::Smsc95xxMacAddressGet to obtain the
-  MAC address.
-
-  @param [in] NicDevice       NIC_DEVICE_INSTANCE pointer
-
-  @retval EFI_SUCCESS     Setup was successful
-
-**/
-EFI_STATUS
-SN_Setup (
-  IN NIC_DEVICE *NicDevice
-  );
-
-/**
-  This routine starts the network interface.
-
-  @param [in] SimpleNetwork    Protocol instance pointer
-
-  @retval EFI_SUCCESS           This operation was successful.
-  @retval EFI_ALREADY_STARTED   The network interface was already started.
-  @retval EFI_INVALID_PARAMETER SimpleNetwork parameter was NULL or did not point to a valid
-                                EFI_SIMPLE_NETWORK_PROTOCOL structure.
-  @retval EFI_DEVICE_ERROR      The command could not be sent to the network interface.
-  @retval EFI_UNSUPPORTED       The increased buffer size feature is not supported.
-
-**/
-EFI_STATUS
-EFIAPI
-SN_Start (
-  IN EFI_SIMPLE_NETWORK_PROTOCOL *SimpleNetwork
-  );
-
-/**
-  Set the MAC address.
-
-  This function modifies or resets the current station address of a
-  network interface.  If Reset is TRUE, then the current station address
-  is set ot the network interface's permanent address.  If Reset if FALSE
-  then the current station address is changed to the address specified by
-  New.
-
-  This routine calls ::Smsc95xxMacAddressSet to update the MAC address
-  in the network adapter.
-
-  @param [in] SimpleNetwork    Protocol instance pointer
-  @param [in] Reset            Flag used to reset the station address to the
-                                network interface's permanent address.
-  @param [in] New              New station address to be used for the network
-                                interface.
-
-  @retval EFI_SUCCESS           This operation was successful.
-  @retval EFI_NOT_STARTED       The network interface was not started.
-  @retval EFI_INVALID_PARAMETER SimpleNetwork parameter was NULL or did not point to a valid
-                                EFI_SIMPLE_NETWORK_PROTOCOL structure.
-  @retval EFI_DEVICE_ERROR      The command could not be sent to the network interface.
-  @retval EFI_UNSUPPORTED       The increased buffer size feature is not supported.
-
-**/
-EFI_STATUS
-EFIAPI
-SN_StationAddress (
-  IN EFI_SIMPLE_NETWORK_PROTOCOL *SimpleNetwork,
-  IN BOOLEAN                     Reset,
-  IN EFI_MAC_ADDRESS             *New
-  );
-
-/**
-  This function resets or collects the statistics on a network interface.
-  If the size of the statistics table specified by StatisticsSize is not
-  big enough for all of the statistics that are collected by the network
-  interface, then a partial buffer of statistics is returned in
-  StatisticsTable.
-
-  @param [in] SimpleNetwork    Protocol instance pointer
-  @param [in] Reset            Set to TRUE to reset the statistics for the network interface.
-  @param [in, out] StatisticsSize  On input the size, in bytes, of StatisticsTable.  On output
-                                the size, in bytes, of the resulting table of statistics.
-  @param [out] StatisticsTable A pointer to the EFI_NETWORK_STATISTICS structure that
-                                conains the statistics.
-
-  @retval EFI_SUCCESS           This operation was successful.
-  @retval EFI_NOT_STARTED       The network interface was not started.
-  @retval EFI_BUFFER_TOO_SMALL  The StatisticsTable is NULL or the buffer is too small.
-  @retval EFI_INVALID_PARAMETER SimpleNetwork parameter was NULL or did not point to a valid
-                                EFI_SIMPLE_NETWORK_PROTOCOL structure.
-  @retval EFI_DEVICE_ERROR      The command could not be sent to the network interface.
-  @retval EFI_UNSUPPORTED       The increased buffer size feature is not supported.
-
-**/
-EFI_STATUS
-EFIAPI
-SN_Statistics (
-  IN     EFI_SIMPLE_NETWORK_PROTOCOL *SimpleNetwork,
-  IN     BOOLEAN                     Reset,
-  IN OUT UINTN                       *StatisticsSize,
-  OUT    EFI_NETWORK_STATISTICS      *StatisticsTable
-  );
-
-/**
-  This function stops a network interface.  This call is only valid
-  if the network interface is in the started state.
-
-  @param [in] SimpleNetwork    Protocol instance pointer
-
-  @retval EFI_SUCCESS           This operation was successful.
-  @retval EFI_NOT_STARTED       The network interface was not started.
-  @retval EFI_INVALID_PARAMETER SimpleNetwork parameter was NULL or did not point to a valid
-                                EFI_SIMPLE_NETWORK_PROTOCOL structure.
-  @retval EFI_DEVICE_ERROR      The command could not be sent to the network interface.
-  @retval EFI_UNSUPPORTED       The increased buffer size feature is not supported.
-
-**/
-EFI_STATUS
-EFIAPI
-SN_Stop (
-  IN EFI_SIMPLE_NETWORK_PROTOCOL *SimpleNetwork
-  );
-
-/**
-  This function releases the memory buffers assigned in the Initialize() call.
-  Ending transmits and receives are lost, and interrupts are cleared and disabled.
-  After this call, only Initialize() and Stop() calls may be used.
-
-  @param [in] SimpleNetwork    Protocol instance pointer
-
-  @retval EFI_SUCCESS           This operation was successful.
-  @retval EFI_NOT_STARTED       The network interface was not started.
-  @retval EFI_INVALID_PARAMETER SimpleNetwork parameter was NULL or did not point to a valid
-                                EFI_SIMPLE_NETWORK_PROTOCOL structure.
-  @retval EFI_DEVICE_ERROR      The command could not be sent to the network interface.
-  @retval EFI_UNSUPPORTED       The increased buffer size feature is not supported.
-
-**/
-EFI_STATUS
-EFIAPI
-SN_Shutdown (
-  IN EFI_SIMPLE_NETWORK_PROTOCOL *SimpleNetwork
-  );
-
-/**
-  Send a packet over the network.
-
-  This function places the packet specified by Header and Buffer on
-  the transmit queue.  This function performs a non-blocking transmit
-  operation.  When the transmit is complete, the buffer is returned
-  via the GetStatus() call.
-
-  This routine calls ::Smsc95xxRx to empty the network adapter of
-  receive packets.  The routine then passes the transmit packet
-  to the network adapter.
-
-  @param [in] SimpleNetwork    Protocol instance pointer
-  @param [in] HeaderSize        The size, in bytes, of the media header to be filled in by
-                                the Transmit() function.  If HeaderSize is non-zero, then
-                                it must be equal to SimpleNetwork->Mode->MediaHeaderSize
-                                and DestAddr and Protocol parameters must not be NULL.
-  @param [in] BufferSize        The size, in bytes, of the entire packet (media header and
-                                data) to be transmitted through the network interface.
-  @param [in] Buffer           A pointer to the packet (media header followed by data) to
-                                to be transmitted.  This parameter can not be NULL.  If
-                                HeaderSize is zero, then the media header is Buffer must
-                                already be filled in by the caller.  If HeaderSize is nonzero,
-                                then the media header will be filled in by the Transmit()
-                                function.
-  @param [in] SrcAddr          The source HW MAC address.  If HeaderSize is zero, then
-                                this parameter is ignored.  If HeaderSize is nonzero and
-                                SrcAddr is NULL, then SimpleNetwork->Mode->CurrentAddress
-                                is used for the source HW MAC address.
-  @param [in] DestAddr         The destination HW MAC address.  If HeaderSize is zero, then
-                                this parameter is ignored.
-  @param [in] Protocol         The type of header to build.  If HeaderSize is zero, then
-                                this parameter is ignored.
-
-  @retval EFI_SUCCESS           This operation was successful.
-  @retval EFI_NOT_STARTED       The network interface was not started.
-  @retval EFI_NOT_READY         The network interface is too busy to accept this transmit request.
-  @retval EFI_BUFFER_TOO_SMALL  The BufferSize parameter is too small.
-  @retval EFI_INVALID_PARAMETER SimpleNetwork parameter was NULL or did not point to a valid
-                                EFI_SIMPLE_NETWORK_PROTOCOL structure.
-  @retval EFI_DEVICE_ERROR      The command could not be sent to the network interface.
-
-**/
-EFI_STATUS
-EFIAPI
-SN_Transmit (
-  IN EFI_SIMPLE_NETWORK_PROTOCOL *SimpleNetwork,
-  IN UINTN           HeaderSize,
-  IN UINTN           BufferSize,
-  IN VOID            *Buffer,
-  IN EFI_MAC_ADDRESS *SrcAddr,
-  IN EFI_MAC_ADDRESS *DestAddr,
-  IN UINT16          *Protocol
-  );
-
-//------------------------------------------------------------------------------
-// Support Routines
-//------------------------------------------------------------------------------
-
-EFI_STATUS
-Smsc95xxMacAddressInit (
-  OUT UINT8     *MacAddress
-  );
-
-/**
-  Get the MAC address
-
-  This routine calls ::Smsc95xxUsbCommand to request the MAC
-  address from the network adapter.
-
-  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
-  @param [out] MacAddress      Address of a six byte buffer to receive the MAC address.
-
-  @retval EFI_SUCCESS          The MAC address is available.
-  @retval other                The MAC address is not valid.
-
-**/
-EFI_STATUS
-Smsc95xxMacAddressGet (
-  IN NIC_DEVICE *NicDevice,
-  OUT UINT8     *MacAddress
-  );
-
-/**
-  Set the MAC address
-
-  This routine calls ::Smsc95xxUsbCommand to set the MAC address
-  in the network adapter.
-
-  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
-  @param [in] MacAddress      Address of a six byte buffer to containing the new MAC address.
-
-  @retval EFI_SUCCESS          The MAC address was set.
-  @retval other                The MAC address was not set.
-
-**/
-EFI_STATUS
-Smsc95xxMacAddressSet (
-  IN NIC_DEVICE   *NicDevice,
-  IN CONST UINT8  *MacAddress
-  );
-
-/**
-  Clear the multicast hash table
-
-  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
-
-**/
-VOID
-Smsc95xxMulticastClear (
-  IN NIC_DEVICE *NicDevice
-  );
-
-/**
-  Enable a multicast address in the multicast hash table
-
-  This routine calls ::Smsc95xxCrc to compute the hash bit for
-  this MAC address.
-
-  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
-  @param [in] MacAddress      Address of a six byte buffer to containing the MAC address.
-
-**/
-VOID
-Smsc95xxMulticastSet (
-  IN NIC_DEVICE *NicDevice,
-  IN UINT8      *MacAddress
-  );
-
-/**
-  Start the link negotiation
-
-  This routine calls ::Smsc95xxPhyWrite to start the PHY's link
-  negotiation.
-
-  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
-
-  @retval EFI_SUCCESS          The link negotiation was started.
-  @retval other                Failed to start the link negotiation.
-
-**/
-EFI_STATUS
-Smsc95xxNegotiateLinkStart (
-  IN NIC_DEVICE *NicDevice
-  );
-
-/**
-  Complete the negotiation of the PHY link
-
-  This routine calls ::Smsc95xxPhyRead to determine if the
-  link negotiation is complete.
-
-  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
-  @param [in, out] PollCount  Address of number of times this routine was polled
-  @param [out] Complete      Address of boolean to receive complate status.
-  @param [out] LinkUp        Address of boolean to receive link status, TRUE=up.
-  @param [out] HiSpeed       Address of boolean to receive link speed, TRUE=100Mbps.
-  @param [out] FullDuplex    Address of boolean to receive link duplex, TRUE=full.
-
-  @retval EFI_SUCCESS          The MAC address is available.
-  @retval other                The MAC address is not valid.
-
-**/
-EFI_STATUS
-Smsc95xxNegotiateLinkComplete (
-  IN     NIC_DEVICE *NicDevice,
-  IN OUT UINTN      *PollCount,
-  OUT    BOOLEAN    *Complete,
-  OUT    BOOLEAN    *LinkUp,
-  OUT    BOOLEAN    *HiSpeed,
-  OUT    BOOLEAN    *FullDuplex
-  );
-
-/**
-  Read a register from the PHY
-
-  This routine calls ::Smsc95xxUsbCommand to read a PHY register.
-
-  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
-  @param [in] RegisterAddress  Number of the register to read.
-  @param [in, out] PhyData    Address of a buffer to receive the PHY register value
-
-  @retval EFI_SUCCESS          The PHY data is available.
-  @retval other                The PHY data is not valid.
-
-**/
-
-
-/**
-  Reset the Smsc95xx
-
-  This routine uses ::Smsc95xxUsbCommand to reset the network
-  adapter.  This routine also uses ::Smsc95xxPhyWrite to reset
-  the PHY.
-
-  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
-
-  @retval EFI_SUCCESS          The MAC address is available.
-  @retval other                The MAC address is not valid.
-
-**/
-EFI_STATUS
-Smsc95xxReset (
-  IN NIC_DEVICE *NicDevice
-  );
-
-/**
-  Enable or disable the receiver
-
-  This routine calls ::Smsc95xxUsbCommand to update the
-  receiver state.  This routine also calls ::Smsc95xxMacAddressSet
-  to establish the MAC address for the network adapter.
-
-  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
-  @param [in] RxFilter         Simple network RX filter mask value
-
-  @retval EFI_SUCCESS          The MAC address was set.
-  @retval other                The MAC address was not set.
-
-**/
-EFI_STATUS
-Smsc95xxRxControl (
-  IN NIC_DEVICE *NicDevice,
-  IN UINT32     RxFilter
-  );
-
-EFI_STATUS
-Smsc95xxReloadSrom  (
-  IN NIC_DEVICE *NicDevice
-  );
-
-/**
-  Read an SROM location
-
-  This routine calls ::Smsc95xxUsbCommand to read data from the
-  SROM.
-
-  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
-  @param [in] Address          SROM address
-  @param [out] Data           Buffer to receive the data
-
-  @retval EFI_SUCCESS          The read was successful
-  @retval other                The read failed
-
-**/
-EFI_STATUS
-Smsc95xxSromRead (
-  IN  NIC_DEVICE *NicDevice,
-  IN  UINT32     Address,
-  OUT UINT16     *Data
-  );
-
-
-EFI_STATUS
-Smsc95xxEnableSromWrite  (
-  IN NIC_DEVICE *NicDevice
-  );
-
-
-EFI_STATUS
-Smsc95xxDisableSromWrite  (
-  IN NIC_DEVICE *NicDevice
-  );
-
-EFI_STATUS
-Smsc95xxSromWrite (
-  IN  NIC_DEVICE *NicDevice,
-  IN  UINT32     Address,
-  OUT UINT16     *Data
-  );
-
-/**
-  Send a command to the USB device.
-
-  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
-  @param [in] Request         Pointer to the request structure
-  @param [in, out] Buffer     Data buffer address
-
-  @retval EFI_SUCCESS          The USB transfer was successful
-  @retval other                The USB transfer failed
-
-**/
-
-EFI_STATUS
-Smsc95xxUsbCommand (
-  IN NIC_DEVICE         *NicDevice,
-  IN USB_DEVICE_REQUEST *Request,
-  IN OUT VOID           *Buffer
-  );
-
-//------------------------------------------------------------------------------
-// EFI Component Name Protocol Support
-//------------------------------------------------------------------------------
-extern EFI_DRIVER_BINDING_PROTOCOL   gDriverBinding;
-extern EFI_COMPONENT_NAME_PROTOCOL   gComponentName;  ///<  Component name protocol declaration
-extern EFI_COMPONENT_NAME2_PROTOCOL  gComponentName2; ///<  Component name 2 protocol declaration
-
-/**
-  Retrieves a Unicode string that is the user readable name of the driver.
-
-  This function retrieves the user readable name of a driver in the form of a
-  Unicode string. If the driver specified by This has a user readable name in
-  the language specified by Language, then a pointer to the driver name is
-  returned in DriverName, and EFI_SUCCESS is returned. If the driver specified
-  by This does not support the language specified by Language,
-  then EFI_UNSUPPORTED is returned.
-
-  @param [in] This             A pointer to the EFI_COMPONENT_NAME2_PROTOCOL or
-                                EFI_COMPONENT_NAME_PROTOCOL instance.
-  @param [in] Language         A pointer to a Null-terminated ASCII string
-                                array indicating the language. This is the
-                                language of the driver name that the caller is
-                                requesting, and it must match one of the
-                                languages specified in SupportedLanguages. The
-                                number of languages supported by a driver is up
-                                to the driver writer. Language is specified
-                                in RFC 3066 or ISO 639-2 language code format.
-  @param [out] DriverName     A pointer to the Unicode string to return.
-                                This Unicode string is the name of the
-                                driver specified by This in the language
-                                specified by Language.
-
-  @retval EFI_SUCCESS           The Unicode string for the Driver specified by
-                                This and the language specified by Language was
-                                returned in DriverName.
-  @retval EFI_INVALID_PARAMETER Language is NULL.
-  @retval EFI_INVALID_PARAMETER DriverName is NULL.
-  @retval EFI_UNSUPPORTED       The driver specified by This does not support
-                                the language specified by Language.
-
-**/
-EFI_STATUS
-EFIAPI
-GetDriverName (
-  IN  EFI_COMPONENT_NAME_PROTOCOL *This,
-  IN  CHAR8                       *Language,
-  OUT CHAR16                      **DriverName
-  );
-
-
-/**
-  Retrieves a Unicode string that is the user readable name of the controller
-  that is being managed by a driver.
-
-  This function retrieves the user readable name of the controller specified by
-  ControllerHandle and ChildHandle in the form of a Unicode string. If the
-  driver specified by This has a user readable name in the language specified by
-  Language, then a pointer to the controller name is returned in ControllerName,
-  and EFI_SUCCESS is returned.  If the driver specified by This is not currently
-  managing the controller specified by ControllerHandle and ChildHandle,
-  then EFI_UNSUPPORTED is returned.  If the driver specified by This does not
-  support the language specified by Language, then EFI_UNSUPPORTED is returned.
-
-  @param [in] This             A pointer to the EFI_COMPONENT_NAME2_PROTOCOL or
-                                EFI_COMPONENT_NAME_PROTOCOL instance.
-  @param [in] ControllerHandle  The handle of a controller that the driver
-                                specified by This is managing.  This handle
-                                specifies the controller whose name is to be
-                                returned.
-  @param [in] ChildHandle       The handle of the child controller to retrieve
-                                the name of.  This is an optional parameter that
-                                may be NULL.  It will be NULL for device
-                                drivers.  It will also be NULL for a bus drivers
-                                that wish to retrieve the name of the bus
-                                controller.  It will not be NULL for a bus
-                                driver that wishes to retrieve the name of a
-                                child controller.
-  @param [in] Language         A pointer to a Null-terminated ASCII string
-                                array indicating the language.  This is the
-                                language of the driver name that the caller is
-                                requesting, and it must match one of the
-                                languages specified in SupportedLanguages. The
-                                number of languages supported by a driver is up
-                                to the driver writer. Language is specified in
-                                RFC 3066 or ISO 639-2 language code format.
-  @param [out] ControllerName A pointer to the Unicode string to return.
-                                This Unicode string is the name of the
-                                controller specified by ControllerHandle and
-                                ChildHandle in the language specified by
-                                Language from the point of view of the driver
-                                specified by This.
-
-  @retval EFI_SUCCESS           The Unicode string for the user readable name in
-                                the language specified by Language for the
-                                driver specified by This was returned in
-                                DriverName.
-  @retval EFI_INVALID_PARAMETER ControllerHandle is not a valid EFI_HANDLE.
-  @retval EFI_INVALID_PARAMETER ChildHandle is not NULL and it is not a valid
-                                EFI_HANDLE.
-  @retval EFI_INVALID_PARAMETER Language is NULL.
-  @retval EFI_INVALID_PARAMETER ControllerName is NULL.
-  @retval EFI_UNSUPPORTED       The driver specified by This is not currently
-                                managing the controller specified by
-                                ControllerHandle and ChildHandle.
-  @retval EFI_UNSUPPORTED       The driver specified by This does not support
-                                the language specified by Language.
-
-**/
-EFI_STATUS
-EFIAPI
-GetControllerName (
-  IN  EFI_COMPONENT_NAME_PROTOCOL *This,
-  IN  EFI_HANDLE                  ControllerHandle,
-  IN OPTIONAL EFI_HANDLE          ChildHandle,
-  IN  CHAR8                       *Language,
-  OUT CHAR16                      **ControllerName
-  );
 
 
 /* Tx command words */
@@ -1433,6 +652,469 @@ GetControllerName (
                        ADVERTISE_100HALF | ADVERTISE_100FULL)
 
 
+//------------------------------------------------------------------------------
+//  Data Types
+//------------------------------------------------------------------------------
+
+/**
+  Ethernet header layout
+
+  IEEE 802.3-2002 Part 3 specification, section 3.1.1.
+**/
+#pragma pack(1)
+typedef struct {
+  UINT8  DestAddr[PXE_HWADDR_LEN_ETHER];  ///<  Destination LAN address
+  UINT8  SrcAddr[PXE_HWADDR_LEN_ETHER];   ///<  Source LAN address
+  UINT16 Type;                            ///<  Protocol or length
+} ETHERNET_HEADER;
+#pragma pack()
+
+/**
+  Receive and Transmit packet structure
+**/
+#pragma pack(1)
+typedef struct _TX_PACKET {
+  UINT32  TxHdr1;
+  UINT32  TxHdr2;
+  UINT8   Data[USB_MAX_PKT_TX_SIZE];
+} TX_PACKET;
+#pragma pack()
+
+#pragma pack(1)
+typedef struct _RX_PACKET {
+  UINT32  RxHdr1;
+  UINT8   Data[USB_MAX_PKT_RX_SIZE];
+} RX_PACKET;
+#pragma pack()
+
+/**
+  Smsc95xx control structure
+
+  The driver uses this structure to manage the MicroChip Smsc95xx 10/100
+  Ethernet controller.
+**/
+typedef struct {
+  UINTN                     Signature;         ///<  Structure identification
+
+  //
+  //  USB data
+  //
+  EFI_HANDLE                Controller;        ///<  Controller handle
+  EFI_USB_IO_PROTOCOL       *UsbIo;            ///<  USB driver interface
+
+  //
+  //  Simple network protocol data
+  //
+  EFI_SIMPLE_NETWORK_PROTOCOL SimpleNetwork;     ///<  Driver's network stack interface
+  EFI_SIMPLE_NETWORK_MODE     SimpleNetworkData; ///<  Data for simple network
+
+  //
+  // Ethernet controller data
+  //
+  BOOLEAN                   Initialized;       ///<  Controller initialized
+  UINT16                    PhyId;             ///<  PHY ID
+
+  //
+  //  Link state
+  //
+  BOOLEAN                   LinkSpeed100Mbps;   ///<  Current link speed, FALSE = 10 Mbps
+  BOOLEAN                   Complete;           ///<  Current state of auto-negotiation
+  BOOLEAN                   FullDuplex;         ///<  Current duplex
+  BOOLEAN                   LinkUp;             ///<  Current link state
+  UINTN                     PollCount;          ///<  Number of times the autonegotiation status was polled
+
+  //  接收数据相关
+  RX_PACKET                 *BulkInbuf;
+#ifdef TURBO_MODE
+  UINT16                    BulkInbufIndex;
+  UINT16                    BulkInbufLegth;
+  UINT8                     RxBurst;
+#endif
+
+  // 发送数据相关
+  TX_PACKET                 *BulkOutBuf;
+  VOID                      *TxBuffer;          // 记录发送数据缓存区的地址，等待回收
+
+  UINT8                     MulticastHash[8];
+  UINT32                    MacCR;
+
+  UINT16                    CurRxControl;
+
+  EFI_DEVICE_PATH_PROTOCOL  *MyDevPath;
+  BOOLEAN                   FirstRst;
+
+  UINT8                     BulkInEndpoint;
+  UINT8                     BulkOutEndpoint;
+  UINT8                     InterruptEndpoint;
+} NIC_DEVICE;
+
+#define DEV_FROM_SIMPLE_NETWORK(a)  CR (a, NIC_DEVICE, SimpleNetwork, DEV_SIGNATURE)  ///< Locate NIC_DEVICE from Simple Network Protocol
+
+//------------------------------------------------------------------------------
+// Simple Network Protocol
+//------------------------------------------------------------------------------
+
+/**
+  Reset the network adapter.
+
+  Resets a network adapter and reinitializes it with the parameters that
+  were provided in the previous call to Initialize ().  The transmit and
+  receive queues are cleared.  Receive filters, the station address, the
+  statistics, and the multicast-IP-to-HW MAC addresses are not reset by
+  this call.
+
+  This routine calls ::Smsc95xxReset to perform the adapter specific
+  reset operation.  This routine also starts the link negotiation
+  by calling ::Smsc95xxNegotiateLinkStart.
+
+  @param [in] SimpleNetwork    Protocol instance pointer
+  @param [in] ExtendedVerification  Indicates that the driver may perform a more
+                                exhaustive verification operation of the device
+                                during reset.
+
+  @retval EFI_SUCCESS           This operation was successful.
+  @retval EFI_NOT_STARTED       The network interface was not started.
+  @retval EFI_INVALID_PARAMETER SimpleNetwork parameter was NULL or did not point to a valid
+                                EFI_SIMPLE_NETWORK_PROTOCOL structure.
+  @retval EFI_DEVICE_ERROR      The command could not be sent to the network interface.
+  @retval EFI_UNSUPPORTED       The increased buffer size feature is not supported.
+
+**/
+EFI_STATUS
+EFIAPI
+SN_Reset (
+  IN EFI_SIMPLE_NETWORK_PROTOCOL *SimpleNetwork,
+  IN BOOLEAN                     ExtendedVerification
+  );
+
+/**
+  Initialize the simple network protocol.
+
+  This routine calls ::Smsc95xxMacAddressGet to obtain the
+  MAC address.
+
+  @param [in] NicDevice       NIC_DEVICE_INSTANCE pointer
+
+  @retval EFI_SUCCESS     Setup was successful
+
+**/
+EFI_STATUS
+SN_Setup (
+  IN NIC_DEVICE *NicDevice
+  );
+
+/**
+  This routine starts the network interface.
+
+  @param [in] SimpleNetwork    Protocol instance pointer
+
+  @retval EFI_SUCCESS           This operation was successful.
+  @retval EFI_ALREADY_STARTED   The network interface was already started.
+  @retval EFI_INVALID_PARAMETER SimpleNetwork parameter was NULL or did not point to a valid
+                                EFI_SIMPLE_NETWORK_PROTOCOL structure.
+  @retval EFI_DEVICE_ERROR      The command could not be sent to the network interface.
+  @retval EFI_UNSUPPORTED       The increased buffer size feature is not supported.
+
+**/
+EFI_STATUS
+EFIAPI
+SN_Start (
+  IN EFI_SIMPLE_NETWORK_PROTOCOL *SimpleNetwork
+  );
+
+/**
+  Set the MAC address.
+
+  This function modifies or resets the current station address of a
+  network interface.  If Reset is TRUE, then the current station address
+  is set ot the network interface's permanent address.  If Reset if FALSE
+  then the current station address is changed to the address specified by
+  New.
+
+  This routine calls ::Smsc95xxMacAddressSet to update the MAC address
+  in the network adapter.
+
+  @param [in] SimpleNetwork    Protocol instance pointer
+  @param [in] Reset            Flag used to reset the station address to the
+                                network interface's permanent address.
+  @param [in] New              New station address to be used for the network
+                                interface.
+
+  @retval EFI_SUCCESS           This operation was successful.
+  @retval EFI_NOT_STARTED       The network interface was not started.
+  @retval EFI_INVALID_PARAMETER SimpleNetwork parameter was NULL or did not point to a valid
+                                EFI_SIMPLE_NETWORK_PROTOCOL structure.
+  @retval EFI_DEVICE_ERROR      The command could not be sent to the network interface.
+  @retval EFI_UNSUPPORTED       The increased buffer size feature is not supported.
+
+**/
+EFI_STATUS
+EFIAPI
+SN_StationAddress (
+  IN EFI_SIMPLE_NETWORK_PROTOCOL *SimpleNetwork,
+  IN BOOLEAN                     Reset,
+  IN EFI_MAC_ADDRESS             *New
+  );
+
+/**
+  This function resets or collects the statistics on a network interface.
+  If the size of the statistics table specified by StatisticsSize is not
+  big enough for all of the statistics that are collected by the network
+  interface, then a partial buffer of statistics is returned in
+  StatisticsTable.
+
+  @param [in] SimpleNetwork    Protocol instance pointer
+  @param [in] Reset            Set to TRUE to reset the statistics for the network interface.
+  @param [in, out] StatisticsSize  On input the size, in bytes, of StatisticsTable.  On output
+                                the size, in bytes, of the resulting table of statistics.
+  @param [out] StatisticsTable A pointer to the EFI_NETWORK_STATISTICS structure that
+                                conains the statistics.
+
+  @retval EFI_SUCCESS           This operation was successful.
+  @retval EFI_NOT_STARTED       The network interface was not started.
+  @retval EFI_BUFFER_TOO_SMALL  The StatisticsTable is NULL or the buffer is too small.
+  @retval EFI_INVALID_PARAMETER SimpleNetwork parameter was NULL or did not point to a valid
+                                EFI_SIMPLE_NETWORK_PROTOCOL structure.
+  @retval EFI_DEVICE_ERROR      The command could not be sent to the network interface.
+  @retval EFI_UNSUPPORTED       The increased buffer size feature is not supported.
+
+**/
+EFI_STATUS
+EFIAPI
+SN_Statistics (
+  IN     EFI_SIMPLE_NETWORK_PROTOCOL *SimpleNetwork,
+  IN     BOOLEAN                     Reset,
+  IN OUT UINTN                       *StatisticsSize,
+  OUT    EFI_NETWORK_STATISTICS      *StatisticsTable
+  );
+
+/**
+  This function stops a network interface.  This call is only valid
+  if the network interface is in the started state.
+
+  @param [in] SimpleNetwork    Protocol instance pointer
+
+  @retval EFI_SUCCESS           This operation was successful.
+  @retval EFI_NOT_STARTED       The network interface was not started.
+  @retval EFI_INVALID_PARAMETER SimpleNetwork parameter was NULL or did not point to a valid
+                                EFI_SIMPLE_NETWORK_PROTOCOL structure.
+  @retval EFI_DEVICE_ERROR      The command could not be sent to the network interface.
+  @retval EFI_UNSUPPORTED       The increased buffer size feature is not supported.
+
+**/
+EFI_STATUS
+EFIAPI
+SN_Stop (
+  IN EFI_SIMPLE_NETWORK_PROTOCOL *SimpleNetwork
+  );
+
+/**
+  This function releases the memory buffers assigned in the Initialize() call.
+  Ending transmits and receives are lost, and interrupts are cleared and disabled.
+  After this call, only Initialize() and Stop() calls may be used.
+
+  @param [in] SimpleNetwork    Protocol instance pointer
+
+  @retval EFI_SUCCESS           This operation was successful.
+  @retval EFI_NOT_STARTED       The network interface was not started.
+  @retval EFI_INVALID_PARAMETER SimpleNetwork parameter was NULL or did not point to a valid
+                                EFI_SIMPLE_NETWORK_PROTOCOL structure.
+  @retval EFI_DEVICE_ERROR      The command could not be sent to the network interface.
+  @retval EFI_UNSUPPORTED       The increased buffer size feature is not supported.
+
+**/
+EFI_STATUS
+EFIAPI
+SN_Shutdown (
+  IN EFI_SIMPLE_NETWORK_PROTOCOL *SimpleNetwork
+  );
+
+/**
+  Send a packet over the network.
+
+  This function places the packet specified by Header and Buffer on
+  the transmit queue.  This function performs a non-blocking transmit
+  operation.  When the transmit is complete, the buffer is returned
+  via the GetStatus() call.
+
+  This routine calls ::Smsc95xxRx to empty the network adapter of
+  receive packets.  The routine then passes the transmit packet
+  to the network adapter.
+
+  @param [in] SimpleNetwork    Protocol instance pointer
+  @param [in] HeaderSize        The size, in bytes, of the media header to be filled in by
+                                the Transmit() function.  If HeaderSize is non-zero, then
+                                it must be equal to SimpleNetwork->Mode->MediaHeaderSize
+                                and DestAddr and Protocol parameters must not be NULL.
+  @param [in] BufferSize        The size, in bytes, of the entire packet (media header and
+                                data) to be transmitted through the network interface.
+  @param [in] Buffer           A pointer to the packet (media header followed by data) to
+                                to be transmitted.  This parameter can not be NULL.  If
+                                HeaderSize is zero, then the media header is Buffer must
+                                already be filled in by the caller.  If HeaderSize is nonzero,
+                                then the media header will be filled in by the Transmit()
+                                function.
+  @param [in] SrcAddr          The source HW MAC address.  If HeaderSize is zero, then
+                                this parameter is ignored.  If HeaderSize is nonzero and
+                                SrcAddr is NULL, then SimpleNetwork->Mode->CurrentAddress
+                                is used for the source HW MAC address.
+  @param [in] DestAddr         The destination HW MAC address.  If HeaderSize is zero, then
+                                this parameter is ignored.
+  @param [in] Protocol         The type of header to build.  If HeaderSize is zero, then
+                                this parameter is ignored.
+
+  @retval EFI_SUCCESS           This operation was successful.
+  @retval EFI_NOT_STARTED       The network interface was not started.
+  @retval EFI_NOT_READY         The network interface is too busy to accept this transmit request.
+  @retval EFI_BUFFER_TOO_SMALL  The BufferSize parameter is too small.
+  @retval EFI_INVALID_PARAMETER SimpleNetwork parameter was NULL or did not point to a valid
+                                EFI_SIMPLE_NETWORK_PROTOCOL structure.
+  @retval EFI_DEVICE_ERROR      The command could not be sent to the network interface.
+
+**/
+EFI_STATUS
+EFIAPI
+SN_Transmit (
+  IN EFI_SIMPLE_NETWORK_PROTOCOL *SimpleNetwork,
+  IN UINTN           HeaderSize,
+  IN UINTN           BufferSize,
+  IN VOID            *Buffer,
+  IN EFI_MAC_ADDRESS *SrcAddr,
+  IN EFI_MAC_ADDRESS *DestAddr,
+  IN UINT16          *Protocol
+  );
+
+//------------------------------------------------------------------------------
+// Support Routines
+//------------------------------------------------------------------------------
+
+EFI_STATUS
+Smsc95xxMacAddressInit (
+  OUT UINT8     *MacAddress
+  );
+
+/**
+  Get the MAC address
+
+  This routine calls ::Smsc95xxUsbCommand to request the MAC
+  address from the network adapter.
+
+  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
+  @param [out] MacAddress      Address of a six byte buffer to receive the MAC address.
+
+  @retval EFI_SUCCESS          The MAC address is available.
+  @retval other                The MAC address is not valid.
+
+**/
+EFI_STATUS
+Smsc95xxMacAddressGet (
+  IN NIC_DEVICE *NicDevice,
+  OUT UINT8     *MacAddress
+  );
+
+/**
+  Set the MAC address
+
+  This routine calls ::Smsc95xxUsbCommand to set the MAC address
+  in the network adapter.
+
+  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
+  @param [in] MacAddress      Address of a six byte buffer to containing the new MAC address.
+
+  @retval EFI_SUCCESS          The MAC address was set.
+  @retval other                The MAC address was not set.
+
+**/
+EFI_STATUS
+Smsc95xxMacAddressSet (
+  IN NIC_DEVICE   *NicDevice,
+  IN CONST UINT8  *MacAddress
+  );
+
+/**
+  Clear the multicast hash table
+
+  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
+
+**/
+VOID
+Smsc95xxMulticastClear (
+  IN NIC_DEVICE *NicDevice
+  );
+
+/**
+  Enable a multicast address in the multicast hash table
+
+  This routine calls ::Smsc95xxCrc to compute the hash bit for
+  this MAC address.
+
+  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
+  @param [in] MacAddress      Address of a six byte buffer to containing the MAC address.
+
+**/
+VOID
+Smsc95xxMulticastSet (
+  IN NIC_DEVICE *NicDevice,
+  IN UINT8      *MacAddress
+  );
+
+/**
+  Start the link negotiation
+
+  This routine calls ::Smsc95xxPhyWrite to start the PHY's link
+  negotiation.
+
+  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
+
+  @retval EFI_SUCCESS          The link negotiation was started.
+  @retval other                Failed to start the link negotiation.
+
+**/
+EFI_STATUS
+Smsc95xxNegotiateLinkStart (
+  IN NIC_DEVICE *NicDevice
+  );
+
+/**
+  Complete the negotiation of the PHY link
+
+  This routine calls ::Smsc95xxPhyRead to determine if the
+  link negotiation is complete.
+
+  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
+  @param [in, out] PollCount  Address of number of times this routine was polled
+  @param [out] Complete      Address of boolean to receive complate status.
+  @param [out] LinkUp        Address of boolean to receive link status, TRUE=up.
+  @param [out] HiSpeed       Address of boolean to receive link speed, TRUE=100Mbps.
+  @param [out] FullDuplex    Address of boolean to receive link duplex, TRUE=full.
+
+  @retval EFI_SUCCESS          The MAC address is available.
+  @retval other                The MAC address is not valid.
+
+**/
+EFI_STATUS
+Smsc95xxNegotiateLinkComplete (
+  IN     NIC_DEVICE *NicDevice,
+  IN OUT UINTN      *PollCount,
+  OUT    BOOLEAN    *Complete,
+  OUT    BOOLEAN    *LinkUp,
+  OUT    BOOLEAN    *HiSpeed,
+  OUT    BOOLEAN    *FullDuplex
+  );
+
+/**
+  Read a register from the PHY
+
+  This routine calls ::Smsc95xxUsbCommand to read a PHY register.
+
+  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
+  @param [in] RegisterAddress Number of the register to read.
+  @param [in, out] PhyData    Address of a buffer to receive the PHY register value
+
+  @retval EFI_SUCCESS          The PHY data is available.
+  @retval other                The PHY data is not valid.
+
+**/
 EFI_STATUS
 Smsc95xxPhyRead (
   IN     NIC_DEVICE *NicDevice,
@@ -1440,6 +1122,19 @@ Smsc95xxPhyRead (
   IN OUT UINT32     *PhyData
   );
 
+/**
+  Write to a PHY register
+
+  This routine calls ::Smsc95xxUsbCommand to write a PHY register.
+
+  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
+  @param [in] RegisterAddress Number of the register to write.
+  @param [in] PhyData         Address of a buffer to receive the PHY register value
+
+  @retval EFI_SUCCESS          The PHY data was written.
+  @retval other                Failed to wwrite the PHY register.
+
+**/
 EFI_STATUS
 Smsc95xxPhyWrite (
   IN NIC_DEVICE *NicDevice,
@@ -1447,10 +1142,229 @@ Smsc95xxPhyWrite (
   IN UINT32     PhyData
   );
 
+/**
+  Reset the Smsc95xx
+
+  This routine uses ::Smsc95xxUsbCommand to reset the network
+  adapter.  This routine also uses ::Smsc95xxPhyWrite to reset
+  the PHY.
+
+  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
+
+  @retval EFI_SUCCESS          The MAC address is available.
+  @retval other                The MAC address is not valid.
+
+**/
+EFI_STATUS
+Smsc95xxReset (
+  IN NIC_DEVICE *NicDevice
+  );
+
+/**
+  Enable or disable the receiver
+
+  This routine calls ::Smsc95xxUsbCommand to update the
+  receiver state.  This routine also calls ::Smsc95xxMacAddressSet
+  to establish the MAC address for the network adapter.
+
+  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
+  @param [in] RxFilter         Simple network RX filter mask value
+
+  @retval EFI_SUCCESS          The MAC address was set.
+  @retval other                The MAC address was not set.
+
+**/
+EFI_STATUS
+Smsc95xxRxControl (
+  IN NIC_DEVICE *NicDevice,
+  IN UINT32     RxFilter
+  );
+
+EFI_STATUS
+Smsc95xxReloadSrom  (
+  IN NIC_DEVICE *NicDevice
+  );
+
+/**
+  Read an SROM location
+
+  This routine calls ::Smsc95xxUsbCommand to read data from the
+  SROM.
+
+  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
+  @param [in] Address          SROM address
+  @param [out] Data           Buffer to receive the data
+
+  @retval EFI_SUCCESS          The read was successful
+  @retval other                The read failed
+
+**/
+EFI_STATUS
+Smsc95xxSromRead (
+  IN  NIC_DEVICE *NicDevice,
+  IN  UINT32     Address,
+  OUT UINT16     *Data
+  );
+
+
+EFI_STATUS
+Smsc95xxEnableSromWrite  (
+  IN NIC_DEVICE *NicDevice
+  );
+
+
+EFI_STATUS
+Smsc95xxDisableSromWrite  (
+  IN NIC_DEVICE *NicDevice
+  );
+
+EFI_STATUS
+Smsc95xxSromWrite (
+  IN  NIC_DEVICE *NicDevice,
+  IN  UINT32     Address,
+  OUT UINT16     *Data
+  );
+
+/**
+  Send a command to the USB device.
+
+  @param [in] NicDevice       Pointer to the NIC_DEVICE structure
+  @param [in] Request         Pointer to the request structure
+  @param [in, out] Buffer     Data buffer address
+
+  @retval EFI_SUCCESS          The USB transfer was successful
+  @retval other                The USB transfer failed
+
+**/
+EFI_STATUS
+Smsc95xxUsbCommand (
+  IN NIC_DEVICE         *NicDevice,
+  IN USB_DEVICE_REQUEST *Request,
+  IN OUT VOID           *Buffer
+  );
+
 BOOLEAN
 Smsc95xxGetLinkStatus (
   IN NIC_DEVICE *NicDevice
-);
+  );
+
+//------------------------------------------------------------------------------
+// EFI Component Name Protocol Support
+//------------------------------------------------------------------------------
+extern EFI_DRIVER_BINDING_PROTOCOL   gDriverBinding;
+extern EFI_COMPONENT_NAME_PROTOCOL   gComponentName;  ///<  Component name protocol declaration
+extern EFI_COMPONENT_NAME2_PROTOCOL  gComponentName2; ///<  Component name 2 protocol declaration
+
+/**
+  Retrieves a Unicode string that is the user readable name of the driver.
+
+  This function retrieves the user readable name of a driver in the form of a
+  Unicode string. If the driver specified by This has a user readable name in
+  the language specified by Language, then a pointer to the driver name is
+  returned in DriverName, and EFI_SUCCESS is returned. If the driver specified
+  by This does not support the language specified by Language,
+  then EFI_UNSUPPORTED is returned.
+
+  @param [in] This             A pointer to the EFI_COMPONENT_NAME2_PROTOCOL or
+                                EFI_COMPONENT_NAME_PROTOCOL instance.
+  @param [in] Language         A pointer to a Null-terminated ASCII string
+                                array indicating the language. This is the
+                                language of the driver name that the caller is
+                                requesting, and it must match one of the
+                                languages specified in SupportedLanguages. The
+                                number of languages supported by a driver is up
+                                to the driver writer. Language is specified
+                                in RFC 3066 or ISO 639-2 language code format.
+  @param [out] DriverName     A pointer to the Unicode string to return.
+                                This Unicode string is the name of the
+                                driver specified by This in the language
+                                specified by Language.
+
+  @retval EFI_SUCCESS           The Unicode string for the Driver specified by
+                                This and the language specified by Language was
+                                returned in DriverName.
+  @retval EFI_INVALID_PARAMETER Language is NULL.
+  @retval EFI_INVALID_PARAMETER DriverName is NULL.
+  @retval EFI_UNSUPPORTED       The driver specified by This does not support
+                                the language specified by Language.
+
+**/
+EFI_STATUS
+EFIAPI
+GetDriverName (
+  IN  EFI_COMPONENT_NAME_PROTOCOL *This,
+  IN  CHAR8                       *Language,
+  OUT CHAR16                      **DriverName
+  );
+
+
+/**
+  Retrieves a Unicode string that is the user readable name of the controller
+  that is being managed by a driver.
+
+  This function retrieves the user readable name of the controller specified by
+  ControllerHandle and ChildHandle in the form of a Unicode string. If the
+  driver specified by This has a user readable name in the language specified by
+  Language, then a pointer to the controller name is returned in ControllerName,
+  and EFI_SUCCESS is returned.  If the driver specified by This is not currently
+  managing the controller specified by ControllerHandle and ChildHandle,
+  then EFI_UNSUPPORTED is returned.  If the driver specified by This does not
+  support the language specified by Language, then EFI_UNSUPPORTED is returned.
+
+  @param [in] This             A pointer to the EFI_COMPONENT_NAME2_PROTOCOL or
+                                EFI_COMPONENT_NAME_PROTOCOL instance.
+  @param [in] ControllerHandle  The handle of a controller that the driver
+                                specified by This is managing.  This handle
+                                specifies the controller whose name is to be
+                                returned.
+  @param [in] ChildHandle       The handle of the child controller to retrieve
+                                the name of.  This is an optional parameter that
+                                may be NULL.  It will be NULL for device
+                                drivers.  It will also be NULL for a bus drivers
+                                that wish to retrieve the name of the bus
+                                controller.  It will not be NULL for a bus
+                                driver that wishes to retrieve the name of a
+                                child controller.
+  @param [in] Language         A pointer to a Null-terminated ASCII string
+                                array indicating the language.  This is the
+                                language of the driver name that the caller is
+                                requesting, and it must match one of the
+                                languages specified in SupportedLanguages. The
+                                number of languages supported by a driver is up
+                                to the driver writer. Language is specified in
+                                RFC 3066 or ISO 639-2 language code format.
+  @param [out] ControllerName A pointer to the Unicode string to return.
+                                This Unicode string is the name of the
+                                controller specified by ControllerHandle and
+                                ChildHandle in the language specified by
+                                Language from the point of view of the driver
+                                specified by This.
+
+  @retval EFI_SUCCESS           The Unicode string for the user readable name in
+                                the language specified by Language for the
+                                driver specified by This was returned in
+                                DriverName.
+  @retval EFI_INVALID_PARAMETER ControllerHandle is not a valid EFI_HANDLE.
+  @retval EFI_INVALID_PARAMETER ChildHandle is not NULL and it is not a valid
+                                EFI_HANDLE.
+  @retval EFI_INVALID_PARAMETER Language is NULL.
+  @retval EFI_INVALID_PARAMETER ControllerName is NULL.
+  @retval EFI_UNSUPPORTED       The driver specified by This is not currently
+                                managing the controller specified by
+                                ControllerHandle and ChildHandle.
+  @retval EFI_UNSUPPORTED       The driver specified by This does not support
+                                the language specified by Language.
+
+**/
+EFI_STATUS
+EFIAPI
+GetControllerName (
+  IN  EFI_COMPONENT_NAME_PROTOCOL *This,
+  IN  EFI_HANDLE                  ControllerHandle,
+  IN OPTIONAL EFI_HANDLE          ChildHandle,
+  IN  CHAR8                       *Language,
+  OUT CHAR16                      **ControllerName
+  );
 
 VOID
 Smsc95xxDumpRegs (

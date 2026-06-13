@@ -430,10 +430,10 @@ Smsc95xxNegotiateLinkComplete (
 
   *LinkUp = ((PhyData & BMSR_LSTATUS) != 0);
   if (*LinkUp) {
-    *Complete = ((PhyData & BMSR_AUTONEG_CMPLT) != 0);
+    *Complete = ((PhyData & BMSR_ANEGCOMPLETE) != 0);
     if (*Complete) {
-      Status = Smsc95xxPhyRead (NicDevice, PHY_ANLPAR, &PhyData);
-      // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r PHY_ANLPAR: 0x%08x\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status, PhyData));
+      Status = Smsc95xxPhyRead (NicDevice, MII_LPA, &PhyData);
+      // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] %r MII_LPA: 0x%08x\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Status, PhyData));
       if (EFI_ERROR (Status)) {
         return Status;
       }
@@ -441,11 +441,11 @@ Smsc95xxNegotiateLinkComplete (
       //  Autonegotiation is complete
       //  Determine the link speed.
       //
-      *HiSpeed = ((PhyData & (AN_TX_FDX | AN_TX_HDX))!= 0);
+      *HiSpeed = ((PhyData & (ADVERTISE_100FULL | ADVERTISE_100HALF))!= 0);
       //
       //  Determine the link duplex.
       //
-      Mask = (*HiSpeed) ? AN_TX_FDX : AN_10_FDX;
+      Mask = (*HiSpeed) ? ADVERTISE_100FULL : ADVERTISE_10FULL;
       *FullDuplex = (BOOLEAN)((PhyData & Mask) != 0);
     }
   }

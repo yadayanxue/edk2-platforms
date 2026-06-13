@@ -596,6 +596,7 @@ SN_Receive (
 
   RX_PACKET               *RxPacket;
   ETHERNET_HEADER         *Header;
+  UINT16                  Length;
 
   TplPrevious = gBS->RaiseTPL (TPL_CALLBACK);
   //
@@ -670,11 +671,12 @@ SN_Receive (
         RxPacket = NicDevice->BulkInbuf;
 #endif
 
-        // DEBUG ((DEBUG_INFO, "BulkIn->RxHdr: 0x%02x, 0x%02x, Length: %d\n", RxPacket->RxHdr1, RxPacket->RxHdr2, RxPacket->Length));
+        Length = (RxPacket->RxHdr1 & RX_STS_FL_) >> 16;
+        // DEBUG ((DEBUG_INFO, "BulkIn->RxHdr: 0x%08x, Length: %d\n", RxPacket->RxHdr1, Length));
 
 #ifdef TURBO_MODE
         // 每个包地址对齐到4字节
-        UINT16 Index = (NicDevice->BulkInbufIndex + RxPacket->Length + 4 + 3) & 0xFFFC;
+        UINT16 Index = (NicDevice->BulkInbufIndex + Length + 4 + 3) & 0xFFFC;
         if (Index < NicDevice->BulkInbufLegth) {
           NicDevice->BulkInbufIndex = Index;
         } else {
@@ -683,7 +685,7 @@ SN_Receive (
         // DEBUG ((DEBUG_INFO, "BulkInbufIndex: %d, BulkInbufLegth: %d\n", NicDevice->BulkInbufIndex, NicDevice->BulkInbufLegth));
 #endif
 
-        if (RxPacket->RxHdr1  != 0x20) {
+        if (RxPacket->RxHdr1 & (RX_STS_FF_ | RX_STS_ES_ | RX_STS_LE_ | RX_STS_TL_ | RX_STS_ME_ | RX_STS_CRC_)) {
 #ifdef TURBO_MODE
           // UINT8 *TmpAddr = ((UINT8 *)NicDevice->BulkInbuf);
           // for (UINT32 i = 0; i < NicDevice->BulkInbufLegth; i++)
@@ -700,7 +702,7 @@ SN_Receive (
           goto no_pkt;
         }
 
-        // for (UINT32 i = 0; i < RxPacket->Length; i++)
+        // for (UINT32 i = 0; i < Length; i++)
         // {
         //   if (i < 14) {
         //     DEBUG ((DEBUG_INFO, "0x%02x ", RxPacket->Data[i]));
@@ -714,15 +716,15 @@ SN_Receive (
         // DEBUG ((DEBUG_INFO, "  %a:%d -> %a] ", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__));
         // DEBUG ((DEBUG_INFO, "HeaderSize: %d, BufferSize: %d, Buffer: %p, SrcAddr: %p, DestAddr: %p, Protocol: %p\n",
         //         HeaderSize ? *HeaderSize : 0, *BufferSize, Buffer, SrcAddr, DestAddr, Protocol));
-        if ((MIN_ETHERNET_PKT_SIZE <= RxPacket->Length)
-         && (RxPacket->Length <= ETHERNET_HEADER_SIZE + NET_VLAN_TAG_LEN + MAX_ETHERNET_PKT_SIZE + 4))
+        if ((MIN_ETHERNET_PKT_SIZE <= Length)
+         && (Length <= ETHERNET_HEADER_SIZE + NET_VLAN_TAG_LEN + MAX_ETHERNET_PKT_SIZE + 4))
         {
-          if (*BufferSize < (UINTN) RxPacket->Length) {
+          if (*BufferSize < (UINTN) Length) {
             gBS->RestoreTPL (TplPrevious);
             return EFI_BUFFER_TOO_SMALL;
           }
-          *BufferSize = RxPacket->Length;
-          CopyMem (Buffer, RxPacket->Data, RxPacket->Length);
+          *BufferSize = Length;
+          CopyMem (Buffer, RxPacket->Data, Length);
           Header = (ETHERNET_HEADER *) RxPacket->Data;
 
           if ((HeaderSize != NULL)) {
@@ -852,7 +854,7 @@ SN_ReceiveFilters (
   UINTN                   Index;
   UINT8                   Temp;
 
-  DEBUG ((DEBUG_INFO, "  %a:%d -> %a]\n, EN:0x%08x, DIS:0x%08x, RST:%d, CNT:%d\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Enable, Disable, ResetMCastFilter, MCastFilterCnt));
+  DEBUG ((DEBUG_INFO, "  %a:%d -> %a] EN:0x%08x, DIS:0x%08x, RST:%d, CNT:%d\n", __FILE_NAME__, DEBUG_LINE_NUMBER, __func__, Enable, Disable, ResetMCastFilter, MCastFilterCnt));
   TplPrevious = gBS->RaiseTPL(TPL_CALLBACK);
   Mode = SimpleNetwork->Mode;
 
